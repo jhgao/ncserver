@@ -5,6 +5,11 @@
 #include <QTcpSocket>
 #include <QTime>
 #include "protocol/packet.h"
+#include "protocol/protocoltypes.h"
+#include "datahandler.h"
+
+//datahandler & encoders
+#include "dhtcp/dhtcp.h"
 
 class Connection : public QTcpSocket
 {
@@ -20,6 +25,8 @@ public slots:
 private slots:
     void onControlSktReadyRead();
     void processCMD(const Packet& p);
+    QByteArray initDataHandler(eProtocTypes type, quint16 port);
+
     void writeOutCMD(eControl_CMD cmd,
                      QByteArray arg = QByteArray());
 
@@ -27,6 +34,13 @@ private:
     QString psCmdDbg(QString cmd, QString arg = QString());
     quint16 packetSize; //for reading packet
     int i_cmd_counter;
+
+    //protocol
+    quint16     i_protoc;
+    quint16     i_protocPort;
+
+    //dh
+    DataHandler *i_dh;
 };
 
 #endif // CONNECTION_H

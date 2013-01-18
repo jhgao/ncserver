@@ -10,6 +10,7 @@
 #define PROTOCOLTYPES_H
 
 enum eProtocTypes{
+    PROTOC_NONE,
     PROTOC_UDP,  //data:UDP, coding:NC
     PROTOC_TCP   //data:TCP, coding:none
 };

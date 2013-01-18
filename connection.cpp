@@ -1,7 +1,8 @@
 #include "connection.h"
 
 Connection::Connection(int socketDescriptor, QObject *parent) :
-    QTcpSocket(parent),packetSize(0),i_cmd_counter(0)
+    QTcpSocket(parent),packetSize(0),i_cmd_counter(0),i_dh(0),
+    i_protoc(PROTOC_NONE),i_protocPort(0)
 {
     this->setSocketDescriptor(socketDescriptor);
     connect(this, SIGNAL(readyRead()),
@@ -10,7 +11,7 @@ Connection::Connection(int socketDescriptor, QObject *parent) :
 
 void Connection::onControlSktReadyRead()
 {
-    qDebug() << "Connection::onControlSktReadyRead()";
+//    qDebug() << "Connection::onControlSktReadyRead()";
     packetSize = 0;
 
     //get packet size
@@ -44,6 +45,8 @@ void Connection::onControlSktReadyRead()
     Packet p;
     if( p.fromPayload(payloadArrey)){
         switch(p.getType()){
+        case DATALINK_DECLARE:
+
         case PTYPE_CMD:
             processCMD(p);
             break;
@@ -59,17 +62,49 @@ void Connection::onControlSktReadyRead()
 
 void Connection::processCMD(const Packet &p)
 {
-    qDebug() << "Connection::processCMD()" << p.getCMD();
+//    qDebug() << "Connection::processCMD()" << p.getCMD();
     i_cmd_counter++;
 
+    QDataStream args(p.getCMDarg());
+    args.setVersion(QDataStream::Qt_4_0);
+
     switch(p.getCMD()){
-    case CON_CONNECTING:
-        psCmdDbg("CON_CONNECTING");
-        writeOutCMD(CON_CONNECTED);
+    case DATALINK_DECLARE:
+        psCmdDbg("DATALINK_DECLARE");
+        args >> i_protoc;
+        args >> i_protocPort;
+        writeOutCMD(DATALINK_DECLARE_ACK,
+                    initDataHandler((eProtocTypes)i_protoc,i_protocPort));
         break;
     default:
         qDebug() << "\t unknown cmd" << p.getCMD();
     }
+}
+
+QByteArray Connection::initDataHandler(eProtocTypes type, quint16 port)
+{
+    if( PROTOC_NONE == type ){
+        qDebug() << "\t protoc none";
+        return QByteArray();
+    }
+
+    switch( type){
+    case PROTOC_TCP:
+        i_dh = new DHtcp(port, this);
+        break;
+    case PROTOC_UDP:
+        break;
+    default:
+        qDebug() << "\t unknown protoc type" << type;
+    }
+
+    //prepare return ack ( protocol , port)
+    QByteArray arg;
+    QDataStream out(&arg,QIODevice::WriteOnly);
+    out << (quint16) type;  //protocol type
+    out << (quint16) port;  //protocol port
+
+    return arg;
 }
 
 void Connection::writeOutCMD(eControl_CMD cmd, QByteArray arg)
