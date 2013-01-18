@@ -1,7 +1,9 @@
 #ifndef DHTCP_H
 #define DHTCP_H
 
+#include <QTcpSocket>
 #include "datahandler.h"
+#include "protocol/cmd_define.h"
 
 class DHtcp : public DataHandler
 {
@@ -12,7 +14,10 @@ public:
 signals:
     
 public slots:
-    
+private:
+    QTcpSocket i_cmdSkt;
+
+    void (*i_fpWriteOutCmd)(eControl_CMD,QByteArray);
 };
 
 #endif // DHTCP_H

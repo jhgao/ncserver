@@ -2,7 +2,8 @@
 
 Connection::Connection(int socketDescriptor, QObject *parent) :
     QTcpSocket(parent),packetSize(0),i_cmd_counter(0),i_dh(0),
-    i_protoc(PROTOC_NONE),i_protocPort(0)
+    i_protoc(PROTOC_NONE),i_protocPort(0),
+    i_socketDescriptor(socketDescriptor)
 {
     this->setSocketDescriptor(socketDescriptor);
     connect(this, SIGNAL(readyRead()),
@@ -11,7 +12,6 @@ Connection::Connection(int socketDescriptor, QObject *parent) :
 
 void Connection::onControlSktReadyRead()
 {
-//    qDebug() << "Connection::onControlSktReadyRead()";
     packetSize = 0;
 
     //get packet size
@@ -90,14 +90,17 @@ QByteArray Connection::initDataHandler(eProtocTypes type, quint16 port)
 
     switch( type){
     case PROTOC_TCP:
-        i_dh = new DHtcp(port, this);
+        i_dh = new DHtcp(port,this);
         break;
     case PROTOC_UDP:
         break;
     default:
         qDebug() << "\t unknown protoc type" << type;
     }
-
+    if( i_dh ){
+        connect(i_dh, SIGNAL(sig_writeOutCmd(eControl_CMD,QByteArray)),
+                this, SLOT(writeOutCMD(eControl_CMD,QByteArray)));
+    }
     //prepare return ack ( protocol , port)
     QByteArray arg;
     QDataStream out(&arg,QIODevice::WriteOnly);

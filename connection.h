@@ -32,6 +32,7 @@ private slots:
 
 private:
     QString psCmdDbg(QString cmd, QString arg = QString());
+    int i_socketDescriptor;
     quint16 packetSize; //for reading packet
     int i_cmd_counter;
 
