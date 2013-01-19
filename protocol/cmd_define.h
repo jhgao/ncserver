@@ -34,8 +34,8 @@ enum eControl_CMD {
     DATALINK_PORT_DECLARE,   //declare self listing data port
     DATALINK_PORT_DECLARE_ACK,  //acknowledgement of GOT a port declare
     //new
-    DATALINK_DECLARE,   //with arguments (protocol, port)
-    DATALINK_DECLARE_ACK,   //with arguments (protocol, port)
+    DATALINK_DECLARE,   //with arguments (protocol, protoc args)
+    DATALINK_DECLARE_ACK,   //with arguments (protocol, ack args)
 
     //encoding & decoding parameter negotiate
     CON_DECODE_PARAM_REQ,   //[client] request this to initialize decoder

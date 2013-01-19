@@ -1,6 +1,6 @@
 #include "datahandler.h"
 
-DataHandler::DataHandler(quint16 port, QObject *parent) :
+DataHandler::DataHandler(QObject *parent) :
     QObject(parent)
 {
 }

@@ -9,8 +9,7 @@ class DataHandler : public QObject
 {
     Q_OBJECT
 public:
-    explicit DataHandler(quint16 port,
-                         QObject *parent = 0);
+    explicit DataHandler(QObject *parent = 0);
     
 signals:
     void sig_writeOutCmd(eControl_CMD,QByteArray);

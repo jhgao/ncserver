@@ -25,7 +25,7 @@ public slots:
 private slots:
     void onControlSktReadyRead();
     void processCMD(const Packet& p);
-    QByteArray initDataHandler(eProtocTypes type, quint16 port);
+    QByteArray initDataHandler(eProtocTypes type, QByteArray protocArg);
 
     void writeOutCMD(eControl_CMD cmd,
                      QByteArray arg = QByteArray());
@@ -38,7 +38,7 @@ private:
 
     //protocol
     quint16     i_protoc;
-    quint16     i_protocPort;
+    QByteArray     i_protocArg;
 
     //dh
     DataHandler *i_dh;

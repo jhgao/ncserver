@@ -2,8 +2,7 @@
 
 Connection::Connection(int socketDescriptor, QObject *parent) :
     QTcpSocket(parent),packetSize(0),i_cmd_counter(0),i_dh(0),
-    i_protoc(PROTOC_NONE),i_protocPort(0),
-    i_socketDescriptor(socketDescriptor)
+    i_protoc(PROTOC_NONE),i_socketDescriptor(socketDescriptor)
 {
     this->setSocketDescriptor(socketDescriptor);
     connect(this, SIGNAL(readyRead()),
@@ -72,16 +71,16 @@ void Connection::processCMD(const Packet &p)
     case DATALINK_DECLARE:
         psCmdDbg("DATALINK_DECLARE");
         args >> i_protoc;
-        args >> i_protocPort;
+        args >> i_protocArg;
         writeOutCMD(DATALINK_DECLARE_ACK,
-                    initDataHandler((eProtocTypes)i_protoc,i_protocPort));
+                    initDataHandler((eProtocTypes)i_protoc,i_protocArg));
         break;
     default:
         qDebug() << "\t unknown cmd" << p.getCMD();
     }
 }
 
-QByteArray Connection::initDataHandler(eProtocTypes type, quint16 port)
+QByteArray Connection::initDataHandler(eProtocTypes type, QByteArray protocArg)
 {
     if( PROTOC_NONE == type ){
         qDebug() << "\t protoc none";
@@ -90,7 +89,7 @@ QByteArray Connection::initDataHandler(eProtocTypes type, quint16 port)
 
     switch( type){
     case PROTOC_TCP:
-        i_dh = new DHtcp(port,this);
+        i_dh = new DHtcp(protocArg,this);
         break;
     case PROTOC_UDP:
         break;
@@ -105,7 +104,7 @@ QByteArray Connection::initDataHandler(eProtocTypes type, quint16 port)
     QByteArray arg;
     QDataStream out(&arg,QIODevice::WriteOnly);
     out << (quint16) type;  //protocol type
-    out << (quint16) port;  //protocol port
+    out << protocArg;  //protocol arguments
 
     return arg;
 }

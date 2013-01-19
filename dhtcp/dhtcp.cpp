@@ -1,15 +1,15 @@
 #include "dhtcp.h"
 
-DHtcp::DHtcp(quint16 port, QObject *parent) :
-    DataHandler(port, parent)
+DHtcp::DHtcp(QByteArray arg, QObject *parent) :
+    DataHandler(parent)
 {
-    QByteArray arg;
-    QDataStream out(&arg, QIODevice::WriteOnly);
+    QByteArray ackArg;
+    QDataStream out(&ackArg, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_4_0);
     out << (quint16) PROTOC_TCP;
-    out << (quint16) port;
+    out << ackArg;
 
     this->sigWriteOutCmd(DATALINK_DECLARE_ACK,
-                      arg);
+                      ackArg);
 }
 
