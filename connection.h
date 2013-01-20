@@ -20,7 +20,7 @@ public:
                              QObject *parent = 0);
     
 signals:
-    void sig_ConnectionFinished(Connection*);
+    void sig_ConnectionFinished();
     
 public slots:
 private slots:

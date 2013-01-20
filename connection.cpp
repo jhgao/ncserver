@@ -7,6 +7,11 @@ Connection::Connection(int socketDescriptor, QObject *parent) :
     this->setSocketDescriptor(socketDescriptor);
     connect(this, SIGNAL(readyRead()),
             this, SLOT(onControlSktReadyRead()));
+    connect(this, SIGNAL(disconnected()),
+            this, SIGNAL(sig_ConnectionFinished()));
+    qDebug() << "Connection()"
+             << "\t" << this->peerAddress().toString()
+             << ":" << this->peerPort();
 }
 
 void Connection::onControlSktReadyRead()
