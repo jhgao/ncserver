@@ -106,8 +106,10 @@ bool Connection::initDataHandler(eProtocTypes type, const QByteArray protocArg)
                 this, SLOT(writeOutCMD(eControl_CMD,QByteArray)));
 
         return true;
-    }else    //init dh failed
+    }else{  //init dh failed
+        qDebug() << "\t Err: DH init failed";
         return false;
+    }
 }
 
 void Connection::writeOutCMD(eControl_CMD cmd, const QByteArray arg)

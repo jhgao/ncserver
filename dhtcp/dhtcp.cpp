@@ -3,10 +3,14 @@
 namespace DHtcp{
 
 DHtcp::DHtcp(const QByteArray arg, QObject *parent) :
-    DataHandler(parent),i_isInitOk(false),i_cmd_counter(0),
-    i_tcpDataSkt(0)
+    DataHandler(parent),i_cmd_counter(0),
+    i_tcpDataSkt(0),i_encoder(0),i_blockNo(0)
 {
     i_tcpDataSkt = new QTcpSocket(this);
+    i_encoder = new DHtcpEncoder(this);
+
+    ServerConfig* sc = ServerConfig::get_instance();
+    i_encoder->setRawFile(sc->getRawFileName());
 
     QDataStream in(arg);
     in.setVersion(QDataStream::Qt_4_0);
@@ -19,9 +23,9 @@ DHtcp::DHtcp(const QByteArray arg, QObject *parent) :
 
     i_tcpDataSkt->connectToHost(QHostAddress(i_clientAddrs),
                                i_clientDataPort);
-    i_isInitOk = i_tcpDataSkt->waitForConnected(WAIT_CONNECT_TIMEOUT);
+    i_tcpDataSkt->waitForConnected(WAIT_CONNECT_TIMEOUT);
 
-    if(i_isInitOk){
+    if( i_tcpDataSkt->isOpen() ){
         connect(i_tcpDataSkt,SIGNAL(readyRead()),
                 this, SLOT(onDataSktReadyRead()));
     }
@@ -39,7 +43,9 @@ QByteArray DHtcp::getInitProtocAckArg() //local ip, data port
 
 bool DHtcp::isInitOk()
 {
-    return i_isInitOk;
+    if( !i_tcpDataSkt ) return false;
+    if( !i_encoder->isReady()) return false;
+    return true;
 }
 
 void DHtcp::onDataSktReadyRead()
@@ -96,6 +102,7 @@ void DHtcp::processCMD(const Packet &p)
     switch(p.getCMD()){
     case CMD_START:
         psCmdDbg("CMD_START");
+        this->waitSendFile();
         break;
     case CMD_STOP:
         psCmdDbg("CMD_STOP");
@@ -123,6 +130,29 @@ void DHtcp::processData(const Packet &p)
     qDebug() << "DHtcp::processData()"
              << p.getData().toHex();
 
+}
+
+bool DHtcp::waitSendCurrentBlock()
+{
+    Packet p(i_encoder->getBlock(i_blockNo));
+    i_tcpDataSkt->write(p.genPacket());
+    return i_tcpDataSkt->waitForBytesWritten();
+}
+
+bool DHtcp::waitSendFile()
+{
+    i_blockNo = 0;
+    while( i_blockNo < i_encoder->getBlockNum() ){
+        qDebug() << "\t DHtcp send block" << i_blockNo;
+        Packet p(i_encoder->getBlock(i_blockNo));
+        i_tcpDataSkt->write(p.genPacket());
+        if(! i_tcpDataSkt->waitForBytesWritten(30000)){ //to hardware
+            qDebug() << "\t DHtcp failed send block" << i_blockNo;
+            return false;
+        }
+        ++i_blockNo;
+    }
+    return true;
 }
 
 }

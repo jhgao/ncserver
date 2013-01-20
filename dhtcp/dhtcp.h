@@ -7,12 +7,15 @@
 #include "datahandler.h"
 #include "protocol/cmd_define.h"
 #include "protocol/packet.h"
+#include "serverconfig.h"
 
 #include "dhtcpprotocol.h"
+#include "dhtcpencoder.h"
 
 namespace DHtcp{
 
 #define WAIT_CONNECT_TIMEOUT 5000
+#define WAIT_SEND_BLOCK_TIMEOUT 30000
 
 class DHtcp : public DataHandler
 {
@@ -31,11 +34,15 @@ private:
     void processCMD(const Packet& p);
     QString psCmdDbg(QString cmd, QString arg = QString());
     void processData(const Packet& p);
-    bool i_isInitOk;
+    bool waitSendCurrentBlock();
+    bool waitSendFile();
     QString i_clientAddrs;
     quint16 i_clientDataPort;
     QTcpSocket* i_tcpDataSkt;
     int i_cmd_counter;
+
+    DHtcpEncoder* i_encoder;
+    quint32 i_blockNo;
 };
 
 }
