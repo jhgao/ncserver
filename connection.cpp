@@ -121,7 +121,7 @@ void Connection::writeOutCMD(eControl_CMD cmd, const QByteArray arg)
 QString Connection::psCmdDbg(QString cmd, QString arg)
 {
     QString dbg;
-    dbg = " cmd " + QString::number(i_cmd_counter);
+    dbg = "Connection got CMD " + QString::number(i_cmd_counter);
     dbg += " [" + cmd + "] ";
     dbg += arg;
     dbg += "\tfrom " + this->peerAddress().toString()
