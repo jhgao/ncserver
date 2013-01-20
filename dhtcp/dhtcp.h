@@ -8,7 +8,7 @@
 #include "protocol/cmd_define.h"
 #include "protocol/packet.h"
 
-#include "dhtcpcmd.h"
+#include "dhtcpprotocol.h"
 
 namespace DHtcp{
 
