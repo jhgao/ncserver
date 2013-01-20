@@ -72,7 +72,7 @@ void Connection::processCMD(const Packet &p)
 
     switch(p.getCMD()){
     case DATALINK_DECLARE:
-        psCmdDbg("DATALINK_DECLARE",p.getCMDarg().toHex());
+        psCmdDbg("DATALINK_DECLARE");
         args >> i_protoc;
         args >> i_protocArg;
         this->processProtocolDeclare((eProtocTypes)i_protoc,i_protocArg);
@@ -82,7 +82,7 @@ void Connection::processCMD(const Packet &p)
     }
 }
 
-bool Connection::initDataHandler(const eProtocTypes type, const QByteArray protocArg)
+bool Connection::initDataHandler(eProtocTypes type, const QByteArray protocArg)
 {
     switch( type){
     case PROTOC_NONE:
@@ -90,16 +90,18 @@ bool Connection::initDataHandler(const eProtocTypes type, const QByteArray proto
         return false;
         break;
     case PROTOC_TCP:
-        i_dh = new DHtcp(protocArg,this);
+        i_dh = new DHtcp::DHtcp(protocArg,this);
         break;
     case PROTOC_UDP:
-        i_dh = new DHudp(protocArg,this);
+        i_dh = new DHudp::DHudp(protocArg,this);
         break;
     default:
         qDebug() << "\t unknown protoc type" << type;
         return false;
     }
-    if( i_dh ){   //init dh success
+    if( !i_dh ) return false;
+
+    if( i_dh->isInitOk() ){   //init dh success
         connect(i_dh, SIGNAL(sig_writeOutCmd(eControl_CMD,QByteArray)),
                 this, SLOT(writeOutCMD(eControl_CMD,QByteArray)));
 
@@ -108,7 +110,7 @@ bool Connection::initDataHandler(const eProtocTypes type, const QByteArray proto
         return false;
 }
 
-void Connection::writeOutCMD(const eControl_CMD cmd, const QByteArray arg)
+void Connection::writeOutCMD(eControl_CMD cmd, const QByteArray arg)
 {
     if(!this->isWritable()) return;
 
@@ -129,18 +131,20 @@ QString Connection::psCmdDbg(QString cmd, QString arg)
     return dbg;
 }
 
-void Connection::processProtocolDeclare(const eProtocTypes type, const QByteArray protocArg)
+void Connection::processProtocolDeclare(eProtocTypes type, const QByteArray protocArg)
 {
     /* init datahandler */
     QByteArray protocAckArg;
     if( initDataHandler(type,protocArg )){
         protocAckArg = i_dh->getInitProtocAckArg();
-    }
 
-    /* gen ack ( CMD , (protocol , protocl arugments)) */
-    QByteArray ack;
-    QDataStream out(&ack,QIODevice::WriteOnly);
-    out << (quint16) type;
-    out << protocAckArg;
-    writeOutCMD(DATALINK_DECLARE_ACK,ack);
+        /* gen ack ( CMD , (protocol , protocl arugments)) */
+        QByteArray ack;
+        QDataStream out(&ack,QIODevice::WriteOnly);
+        out << (quint16) type;
+        out << protocAckArg;
+        writeOutCMD(DATALINK_DECLARE_ACK,ack);
+    }else{
+        this->abort();
+    }
 }

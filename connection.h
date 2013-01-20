@@ -26,14 +26,14 @@ public slots:
 private slots:
     void onControlSktReadyRead();
     void processCMD(const Packet& p);
-    bool initDataHandler(const eProtocTypes type, const QByteArray protocArg);
+    bool initDataHandler(eProtocTypes type, const QByteArray protocArg);
 
-    void writeOutCMD(const eControl_CMD cmd,
+    void writeOutCMD(eControl_CMD cmd,
                      const QByteArray arg = QByteArray());
 
 private:
     QString psCmdDbg(QString cmd, QString arg = QString());
-    void processProtocolDeclare(const eProtocTypes type, const QByteArray protocArg);
+    void processProtocolDeclare(eProtocTypes type, const QByteArray protocArg);
     int i_socketDescriptor;
     quint16 packetSize; //for reading packet
     int i_cmd_counter;
