@@ -18,7 +18,8 @@ class ServerWindow : public QMainWindow
 public:
     explicit ServerWindow(QWidget *parent = 0);
     ~ServerWindow();
-    
+private slots:
+    void setEncoderRawFiles(QList<QUrl>);
 private:
     void showListeningPort(QString ip, quint16 port);
 
