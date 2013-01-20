@@ -11,7 +11,7 @@ class DHtcp : public DataHandler
     Q_OBJECT
 public:
     explicit DHtcp(const QByteArray arg, QObject *parent = 0);
-    QByteArray getInitAckArg();
+    QByteArray getInitProtocAckArg();
 signals:
     
 public slots:

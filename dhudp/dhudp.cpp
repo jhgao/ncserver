@@ -6,7 +6,7 @@ DHudp::DHudp(const QByteArray arg, QObject *parent) :
     qDebug() << "DHudp::DHudp()";
 }
 
-QByteArray DHudp::getInitAckArg()
+QByteArray DHudp::getInitProtocAckArg()
 {
     return QByteArray();
 }

@@ -11,7 +11,7 @@ class DHudp : public DataHandler
     Q_OBJECT
 public:
     explicit DHudp(const QByteArray arg, QObject *parent = 0);
-    QByteArray getInitAckArg();
+    QByteArray getInitProtocAckArg();
 signals:
     
 public slots:

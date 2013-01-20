@@ -6,7 +6,7 @@ DHtcp::DHtcp(const QByteArray arg, QObject *parent) :
     qDebug() << "DHtcp::DHtcp()";
 }
 
-QByteArray DHtcp::getInitAckArg()
+QByteArray DHtcp::getInitProtocAckArg()
 {
     QByteArray arg;
     QDataStream out(&arg, QIODevice::WriteOnly);

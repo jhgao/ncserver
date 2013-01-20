@@ -16,8 +16,9 @@ void WaitingServer::incomingConnection(int socketDescriptor)
             this, SLOT(onConnectionFinished(ConnectionThread*)));
     ct->start();    //TODO: priority
 
-    qDebug() << "\t working link:" << listOfConThreads.size()
-             << " / in count" << icount;
+    qDebug() << "\t working link / incoming count: "
+             << listOfConThreads.size()
+             << "/" << icount;
 }
 
 void WaitingServer::onConnectionFinished(ConnectionThread *ct)

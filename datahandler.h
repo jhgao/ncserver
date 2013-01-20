@@ -15,7 +15,7 @@ public:
      * conotrol link will call this func and send ack back
      * to client.
      */
-    virtual QByteArray getInitAckArg() = 0;
+    virtual QByteArray getInitProtocAckArg() = 0;
 signals:
     void sig_writeOutCmd(eControl_CMD,QByteArray);
     

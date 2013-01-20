@@ -7,11 +7,12 @@ Connection::Connection(int socketDescriptor, QObject *parent) :
     this->setSocketDescriptor(socketDescriptor);
     connect(this, SIGNAL(readyRead()),
             this, SLOT(onControlSktReadyRead()));
-    connect(this, SIGNAL(disconnected()),
+    connect(this, SIGNAL(disconnected()),   //TODO: when to finish
             this, SIGNAL(sig_ConnectionFinished()));
-    qDebug() << "Connection()"
-             << "\t" << this->peerAddress().toString()
-             << ":" << this->peerPort();
+
+    qDebug() << ">>> Connection() from "
+             << this->peerAddress().toString()
+             << " : " << this->peerPort();
 }
 
 void Connection::onControlSktReadyRead()
@@ -133,7 +134,7 @@ void Connection::processProtocolDeclare(const eProtocTypes type, const QByteArra
     /* init datahandler */
     QByteArray protocAckArg;
     if( initDataHandler(type,protocArg )){
-        protocAckArg = i_dh->getInitAckArg();
+        protocAckArg = i_dh->getInitProtocAckArg();
     }
 
     /* gen ack ( CMD , (protocol , protocl arugments)) */
