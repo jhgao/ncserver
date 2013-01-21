@@ -34,11 +34,17 @@ QByteArray DHtcpEncoder::getBlock(quint32 i)
     RawBlock b;
 
     quint64 offset = RAW_BLOCK_SIZE * i;
-    if( offset +1 > i_rawFile.size() ) return QByteArray();
+    if( offset +1 > i_rawFile.size() ){
+        qDebug() << "\t DHtcpEncoder::getBlock() beyond last block";
+        return QByteArray();
+    }
     b.fileSize = i_rawFile.size();
 
     QFile f(i_rawFile.absoluteFilePath());
-    if( f.open(QIODevice::ReadOnly) ) return QByteArray();
+    if( !f.open(QIODevice::ReadOnly) ){
+        qDebug() << "\t DHtcpEncoder::getBlock() open file failed";
+        return QByteArray();
+    }
     f.seek(offset);
     b.data = f.read((quint64)RAW_BLOCK_SIZE);
     b.offsetFrom = offset;

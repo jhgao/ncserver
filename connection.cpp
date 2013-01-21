@@ -21,7 +21,7 @@ void Connection::onControlSktReadyRead()
 
     //get packet size
     QDataStream in(this);
-    in.setVersion(QDataStream::Qt_4_0);
+    in.setVersion(QDataStream::Qt_4_8);
     if (packetSize == 0) {
         if (this->bytesAvailable() < (int)sizeof(quint16)){
             qDebug() << "\t E: packet size wrong"
@@ -68,7 +68,7 @@ void Connection::processCMD(const Packet &p)
     i_cmd_counter++;
 
     QDataStream args(p.getCMDarg());
-    args.setVersion(QDataStream::Qt_4_0);
+    args.setVersion(QDataStream::Qt_4_8);
 
     switch(p.getCMD()){
     case DATALINK_DECLARE:

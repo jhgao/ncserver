@@ -13,7 +13,7 @@ DHtcp::DHtcp(const QByteArray arg, QObject *parent) :
     i_encoder->setRawFile(sc->getRawFileName());
 
     QDataStream in(arg);
-    in.setVersion(QDataStream::Qt_4_0);
+    in.setVersion(QDataStream::Qt_4_8);
     in >> i_clientAddrs;
     in >> i_clientDataPort;
 
@@ -35,7 +35,7 @@ QByteArray DHtcp::getInitProtocAckArg() //local ip, data port
 {
     QByteArray arg;
     QDataStream out(&arg, QIODevice::WriteOnly);
-    out.setVersion(QDataStream::Qt_4_0);
+    out.setVersion(QDataStream::Qt_4_8);
     out << i_tcpDataSkt->localAddress().toString();
     out << (quint16)i_tcpDataSkt->localPort();
     return arg;
@@ -54,7 +54,7 @@ void DHtcp::onDataSktReadyRead()
 
     //get packet size
     QDataStream in(i_tcpDataSkt);
-    in.setVersion(QDataStream::Qt_4_0);
+    in.setVersion(QDataStream::Qt_4_8);
     if (packetSize == 0) {
         if (i_tcpDataSkt->bytesAvailable() < (int)sizeof(quint16)){
             qDebug() << "\t E: packet size wrong"
@@ -144,10 +144,11 @@ bool DHtcp::waitSendFile()
     i_blockNo = 0;
     quint64 blockNum = i_encoder->getBlockNum();
     while( i_blockNo < blockNum ){
-        qDebug() << "\t DHtcp send block" << i_blockNo
-                 << "/" << blockNum;
         Packet p(i_encoder->getBlock(i_blockNo));
-        i_tcpDataSkt->write(p.genPacket());
+        qDebug() << "\t DHtcp send block" << i_blockNo
+                 << "/" << blockNum
+                 << "wrote out ="
+                 << i_tcpDataSkt->write(p.genPacket());
         if(! i_tcpDataSkt->waitForBytesWritten(30000)){ //to hardware
             qDebug() << "\t DHtcp failed send block" << i_blockNo;
             return false;
