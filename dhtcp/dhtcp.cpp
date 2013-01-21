@@ -108,7 +108,7 @@ void DHtcp::processCMD(const Packet &p)
         psCmdDbg("CMD_STOP");
         break;
     default:
-        psCmdDbg("? UNKNOWN ?");
+        psCmdDbg(QString::number(p.getCMD()) + "?UNKNOWN" );
     }
 }
 
@@ -143,16 +143,20 @@ bool DHtcp::waitSendFile()
 {
     i_blockNo = 0;
     quint64 blockNum = i_encoder->getBlockNum();
+    quint64 wroteBytes = 0;
     while( i_blockNo < blockNum ){
         Packet p(i_encoder->getBlock(i_blockNo));
-        qDebug() << "\t DHtcp send block" << i_blockNo
-                 << "/" << blockNum
-                 << "wrote out ="
-                 << i_tcpDataSkt->write(p.genPacket());
+        qDebug() << p.dbgString();
+        i_tcpDataSkt->write(Packet(CON_D5F).genPacket());   //for debug
+        wroteBytes = i_tcpDataSkt->write(p.genPacket());
+
         if(! i_tcpDataSkt->waitForBytesWritten(30000)){ //to hardware
             qDebug() << "\t DHtcp failed send block" << i_blockNo;
             return false;
         }
+        qDebug() << "\t DHtcp send block " << i_blockNo
+                 << "/" << blockNum
+                 << "wrote out" << wroteBytes << "bytes";
         ++i_blockNo;
     }
     return true;
