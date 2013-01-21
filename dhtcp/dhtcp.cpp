@@ -142,8 +142,10 @@ bool DHtcp::waitSendCurrentBlock()
 bool DHtcp::waitSendFile()
 {
     i_blockNo = 0;
-    while( i_blockNo < i_encoder->getBlockNum() ){
-        qDebug() << "\t DHtcp send block" << i_blockNo;
+    quint64 blockNum = i_encoder->getBlockNum();
+    while( i_blockNo < blockNum ){
+        qDebug() << "\t DHtcp send block" << i_blockNo
+                 << "/" << blockNum;
         Packet p(i_encoder->getBlock(i_blockNo));
         i_tcpDataSkt->write(p.genPacket());
         if(! i_tcpDataSkt->waitForBytesWritten(30000)){ //to hardware
