@@ -7,7 +7,7 @@
 
 #include "protocol/rawblock.h"
 
-#define RAW_BLOCK_SIZE (1000) //1000bytes
+#define RAW_BLOCK_SIZE (1000) //packet payload size
 
 namespace DHtcp{
 class DHtcpEncoder : public QObject
