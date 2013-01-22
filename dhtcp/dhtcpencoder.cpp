@@ -15,6 +15,11 @@ bool DHtcpEncoder::setRawFile(QString absPath)
     return true;
 }
 
+QString DHtcpEncoder::getRawFileName() const
+{
+    return i_rawFile.absoluteFilePath();
+}
+
 bool DHtcpEncoder::isReady()
 {
     if(i_rawFile.exists()) return true;
@@ -34,7 +39,7 @@ QByteArray DHtcpEncoder::getBlock(quint32 i)
     RawBlock b;
     b.fileSize = i_rawFile.size();
 
-    quint64 offset = RAW_BLOCK_SIZE * i;
+    qint64 offset = RAW_BLOCK_SIZE * i;
     if( offset +1 > i_rawFile.size() ){
         qDebug() << "\t DHtcpEncoder::getBlock() beyond last block";
         b.offsetFrom = 0;

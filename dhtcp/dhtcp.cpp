@@ -142,26 +142,22 @@ bool DHtcp::waitSendCurrentBlock()
 bool DHtcp::waitSendFile()
 {
     i_blockNo = 0;
-    quint64 blockNum = i_encoder->getBlockNum();
-    quint64 wroteBytes = 0;
-    while( i_blockNo < blockNum ){
-        Packet p(i_encoder->getBlock(i_blockNo));
 
-        wroteBytes = i_tcpDataSkt->write(p.genPacket());
-        if( wroteBytes < 0 ){
-            qDebug() << "\t Err: send block" << i_blockNo
-                     <<  p.dbgString();
-        }
+    QFile rawFile(i_encoder->getRawFileName());
+
+    rawFile.open(QIODevice::ReadOnly);
+    while( !rawFile.atEnd() ){
+        QByteArray a = rawFile.read(RAW_BLOCK_SIZE);
+        i_tcpDataSkt->write(a);
 
         if(! i_tcpDataSkt->waitForBytesWritten(WAIT_FOR_BYTES_WRITTEN_TIMEOUT)){ //to hardware
-            qDebug() << "\t DHtcp failed send block" << i_blockNo;
+            qDebug() << "\t DHtcp failed send at file pos" << rawFile.pos();
             return false;
         }
-        ++i_blockNo;
     }
-    Packet p(FILE_SENT);
-    i_tcpDataSkt->write(p.genPacket());
-    qDebug() << "DHtcp::waitSendFile() done, send block" << i_blockNo;
+
+    i_tcpDataSkt->disconnectFromHost();
+    qDebug() << "DHtcp::waitSendFile() done";
     return true;
 }
 
