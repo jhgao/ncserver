@@ -4,7 +4,7 @@ namespace DHtcp{
 
 DHtcp::DHtcp(const QByteArray arg, QObject *parent) :
     DataHandler(parent),i_cmd_counter(0),
-    i_tcpDataSkt(0),i_encoder(0),i_blockNo(0)
+    i_tcpDataSkt(0),i_packetSize(0),i_encoder(0),i_blockNo(0)
 {
     i_tcpDataSkt = new QTcpSocket(this);
     i_encoder = new DHtcpEncoder(this);
@@ -23,9 +23,8 @@ DHtcp::DHtcp(const QByteArray arg, QObject *parent) :
 
     i_tcpDataSkt->connectToHost(QHostAddress(i_clientAddrs),
                                i_clientDataPort);
-    i_tcpDataSkt->waitForConnected(WAIT_FOR_CONNECTED_TIMEOUT);
 
-    if( i_tcpDataSkt->isOpen() ){
+    if( i_tcpDataSkt->waitForConnected(WAIT_FOR_CONNECTED_TIMEOUT) ){
         connect(i_tcpDataSkt,SIGNAL(readyRead()),
                 this, SLOT(onDataSktReadyRead()));
     }
@@ -50,12 +49,10 @@ bool DHtcp::isInitOk()
 
 void DHtcp::onDataSktReadyRead()
 {
-    quint16 packetSize = 0;
-
     //get packet size
     QDataStream in(i_tcpDataSkt);
     in.setVersion(QDataStream::Qt_4_8);
-    if (packetSize == 0) {
+    if (i_packetSize == 0) {
         if (i_tcpDataSkt->bytesAvailable() < (int)sizeof(quint16)){
             qDebug() << "\t E: packet size wrong"
                      << i_tcpDataSkt->bytesAvailable()
@@ -63,15 +60,15 @@ void DHtcp::onDataSktReadyRead()
                      << (int)sizeof(quint16);;
             return;
         }
-        in >> packetSize;
+        in >> i_packetSize;
     }
 
     //ensure data size available
-    if (i_tcpDataSkt->bytesAvailable() < packetSize){
+    if (i_tcpDataSkt->bytesAvailable() < i_packetSize){
         qDebug() << "\t E: not enough data bytes"
                  << i_tcpDataSkt->bytesAvailable()
                  << "/need "
-                 << packetSize;
+                 << i_packetSize;
         return;
     }
 
@@ -93,6 +90,8 @@ void DHtcp::onDataSktReadyRead()
             qDebug() << "\t unknown packet type";
         }
     }
+
+    i_packetSize = 0;
 }
 
 void DHtcp::processCMD(const Packet &p)
@@ -102,7 +101,11 @@ void DHtcp::processCMD(const Packet &p)
     switch(p.getCMD()){
     case CMD_START:
         psCmdDbg("CMD_START");
-        this->waitSendFile();
+        this->sendStartRequest();
+        break;
+    case FILE_SENT_BLOCKING_GOAHEAD:
+        psCmdDbg("FILE_SENT_BLOCKING_GOAHEAD");
+        this->sendFileBlocking();
         break;
     case CMD_STOP:
         psCmdDbg("CMD_STOP");
@@ -139,7 +142,7 @@ bool DHtcp::waitSendCurrentBlock()
     return i_tcpDataSkt->waitForBytesWritten(WAIT_FOR_BYTES_WRITTEN_TIMEOUT);
 }
 
-bool DHtcp::waitSendFile()
+bool DHtcp::sendFileBlocking()
 {
     i_blockNo = 0;
 
@@ -159,6 +162,25 @@ bool DHtcp::waitSendFile()
     i_tcpDataSkt->disconnectFromHost();
     qDebug() << "DHtcp::waitSendFile() done";
     return true;
+}
+
+void DHtcp::writeOutCmd(eCMD cmd, const QByteArray &arg)
+{
+    if(!i_tcpDataSkt) return;
+
+    Packet p(cmd,arg);
+    i_tcpDataSkt->write(p.genPacket());
+}
+
+void DHtcp::sendStartRequest()
+{
+    qDebug() << "DHtcp::sendStartRequest()";
+    QByteArray arg;
+    QDataStream out(&arg,QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_4_8);
+    out << (quint64) i_encoder->getRawFileSize();
+
+    this->writeOutCmd(FILE_SENT_BLOCKING,arg);
 }
 
 }

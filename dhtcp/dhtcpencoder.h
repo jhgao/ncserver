@@ -17,6 +17,7 @@ public:
     explicit DHtcpEncoder(QObject *parent = 0);
     bool setRawFile(QString absPath);
     QString getRawFileName()const;
+    qint64 getRawFileSize()const;
     bool isReady();
     quint64 getBlockNum();
     QByteArray getBlock(quint32);

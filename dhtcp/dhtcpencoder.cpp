@@ -20,6 +20,11 @@ QString DHtcpEncoder::getRawFileName() const
     return i_rawFile.absoluteFilePath();
 }
 
+qint64 DHtcpEncoder::getRawFileSize() const
+{
+    return i_rawFile.size();
+}
+
 bool DHtcpEncoder::isReady()
 {
     if(i_rawFile.exists()) return true;

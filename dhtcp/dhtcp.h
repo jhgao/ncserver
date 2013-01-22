@@ -35,10 +35,13 @@ private:
     QString psCmdDbg(QString cmd, QString arg = QString());
     void processData(const Packet& p);
     bool waitSendCurrentBlock();
-    bool waitSendFile();
+    bool sendFileBlocking();
+    void writeOutCmd(eCMD, const QByteArray& = QByteArray());
+    void sendStartRequest();
     QString i_clientAddrs;
     quint16 i_clientDataPort;
     QTcpSocket* i_tcpDataSkt;
+    quint16 i_packetSize;   //used when nonblocking rcv
     int i_cmd_counter;
 
     DHtcpEncoder* i_encoder;
