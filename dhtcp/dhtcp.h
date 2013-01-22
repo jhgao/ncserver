@@ -14,8 +14,8 @@
 
 namespace DHtcp{
 
-#define WAIT_CONNECT_TIMEOUT 5000
-#define WAIT_SEND_BLOCK_TIMEOUT 30000
+#define WAIT_FOR_CONNECTED_TIMEOUT 5000
+#define WAIT_FOR_BYTES_WRITTEN_TIMEOUT (5000)  //5s
 
 class DHtcp : public DataHandler
 {

@@ -9,6 +9,7 @@ class RawBlock
 public:
     RawBlock();
     QByteArray toArray();
+    void fromArray(const QByteArray &);
 
     quint64 fileSize;
     quint64 offsetFrom;

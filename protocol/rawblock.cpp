@@ -16,3 +16,13 @@ QByteArray RawBlock::toArray()
 
     return a;
 }
+
+void RawBlock::fromArray(const QByteArray &a)
+{
+    QDataStream in(a);
+    in.setVersion(QDataStream::Qt_4_8);
+    in >> fileSize;
+    in >> offsetFrom;
+    in >> offsetTo;
+    in >> data;
+}

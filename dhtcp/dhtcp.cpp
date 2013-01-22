@@ -23,7 +23,7 @@ DHtcp::DHtcp(const QByteArray arg, QObject *parent) :
 
     i_tcpDataSkt->connectToHost(QHostAddress(i_clientAddrs),
                                i_clientDataPort);
-    i_tcpDataSkt->waitForConnected(WAIT_CONNECT_TIMEOUT);
+    i_tcpDataSkt->waitForConnected(WAIT_FOR_CONNECTED_TIMEOUT);
 
     if( i_tcpDataSkt->isOpen() ){
         connect(i_tcpDataSkt,SIGNAL(readyRead()),
@@ -136,7 +136,7 @@ bool DHtcp::waitSendCurrentBlock()
 {
     Packet p(i_encoder->getBlock(i_blockNo));
     i_tcpDataSkt->write(p.genPacket());
-    return i_tcpDataSkt->waitForBytesWritten();
+    return i_tcpDataSkt->waitForBytesWritten(WAIT_FOR_BYTES_WRITTEN_TIMEOUT);
 }
 
 bool DHtcp::waitSendFile()
@@ -146,19 +146,22 @@ bool DHtcp::waitSendFile()
     quint64 wroteBytes = 0;
     while( i_blockNo < blockNum ){
         Packet p(i_encoder->getBlock(i_blockNo));
-        qDebug() << p.dbgString();
-        i_tcpDataSkt->write(Packet(CON_D5F).genPacket());   //for debug
-        wroteBytes = i_tcpDataSkt->write(p.genPacket());
 
-        if(! i_tcpDataSkt->waitForBytesWritten(30000)){ //to hardware
+        wroteBytes = i_tcpDataSkt->write(p.genPacket());
+        if( wroteBytes < 0 ){
+            qDebug() << "\t Err: send block" << i_blockNo
+                     <<  p.dbgString();
+        }
+
+        if(! i_tcpDataSkt->waitForBytesWritten(WAIT_FOR_BYTES_WRITTEN_TIMEOUT)){ //to hardware
             qDebug() << "\t DHtcp failed send block" << i_blockNo;
             return false;
         }
-        qDebug() << "\t DHtcp send block " << i_blockNo
-                 << "/" << blockNum
-                 << "wrote out" << wroteBytes << "bytes";
         ++i_blockNo;
     }
+    Packet p(FILE_SENT);
+    i_tcpDataSkt->write(p.genPacket());
+    qDebug() << "DHtcp::waitSendFile() done, send block" << i_blockNo;
     return true;
 }
 
