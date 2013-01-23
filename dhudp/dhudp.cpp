@@ -4,11 +4,13 @@
 namespace nProtocUDP{
 
 DHudp::DHudp(const QByteArray arg, QObject *parent) :
-    DataHandler(parent),i_tcpCmdSkt(0),
-    i_cmd_counter(0),i_cmdPacketSize(0),i_dataPacketSize(0),
-    i_encoder(0)
+    DataHandler(parent),i_encoder(0),
+    i_tcpCmdSkt(0),i_cmd_counter(0),i_cmdPacketSize(0),
+    i_udpDataSkt(0),
+    i_clientCmdListingPort(0),i_clientDataListingPort(0)
 {
     i_tcpCmdSkt = new QTcpSocket(this);
+    i_udpDataSkt = new QUdpSocket(this);
     i_encoder = new DHudpEncoder(this);
 
     ServerConfig* sc = ServerConfig::get_instance();
@@ -16,14 +18,14 @@ DHudp::DHudp(const QByteArray arg, QObject *parent) :
 
     QDataStream in(arg);
     in.setVersion(QDataStream::Qt_4_8);
-    in >> i_clientAddrs;
+    in >> i_clientCmdAddrs;
     in >> i_clientCmdListingPort;
 
     qDebug() << "DHudp::DHudp() new UDP client wating at "
-             << i_clientAddrs
+             << i_clientCmdAddrs
              << ":" << i_clientCmdListingPort;
 
-    i_tcpCmdSkt->connectToHost(QHostAddress(i_clientAddrs),
+    i_tcpCmdSkt->connectToHost(QHostAddress(i_clientCmdAddrs),
                                i_clientCmdListingPort);
 
     if( i_tcpCmdSkt->waitForConnected(WAIT_FOR_CONNECTED_TIMEOUT) ){
@@ -48,6 +50,49 @@ bool DHudp::isInitOk()
 
 void DHudp::onCmdSktReadyRead()
 {
+    i_cmdPacketSize = 0;
+
+    //get packet size
+    QDataStream in(i_tcpCmdSkt);
+    in.setVersion(QDataStream::Qt_4_8);
+    if (i_cmdPacketSize == 0) {
+        if (i_tcpCmdSkt->bytesAvailable() < (int)sizeof(quint16)){
+            qDebug() << "\t E: packet size wrong"
+                     << i_tcpCmdSkt->bytesAvailable()
+                     << "/"
+                     << (int)sizeof(quint16);;
+            return;
+        }
+        in >> i_cmdPacketSize;
+    }
+
+    //ensure data size available
+    if (i_tcpCmdSkt->bytesAvailable() < i_cmdPacketSize){
+        qDebug() << "\t E: not enough data bytes"
+                 << i_tcpCmdSkt->bytesAvailable()
+                 << "/need "
+                 << i_cmdPacketSize;
+        return;
+    }
+
+    //read in data
+    QByteArray payloadArrey;
+    in >> payloadArrey;
+
+    //analyze payload
+    Packet p;
+    if( p.fromPayload(payloadArrey)){
+        switch(p.getType()){
+        case PTYPE_CMD:
+            processCMD(p);
+            break;
+        case PTYPE_DATA:
+            qDebug() << "\t Err: Data from CMD link";
+            break;
+        default:
+            qDebug() << "\t DHudp cmd skt: unknown packet type";
+        }
+    }
 }
 
 void DHudp::onCmdSktDisconnected()
@@ -69,6 +114,19 @@ void DHudp::processCMD(const Packet &p)
     switch(p.getCMD()){
     case CON_START:
         psCmdDbg("CON_START","TODO");
+        if(p.getCMDarg().size() != 0){
+            QDataStream args(p.getCMDarg());
+            args.setVersion(QDataStream::Qt_4_8);
+            args >> i_clientDataAddrs;
+            args >> i_clientDataListingPort;
+
+            i_udpDataSkt->abort();
+            i_udpDataSkt->connectToHost(
+                        QHostAddress(i_clientDataAddrs),
+                        i_clientDataListingPort);
+
+            this->startSending();
+        }
         break;
     case CON_NEXT:
         psCmdDbg("CON_NEXT","TODO");
@@ -104,9 +162,14 @@ QString DHudp::psCmdDbg(QString cmd, QString arg)
     return dbg;
 }
 
-void DHudp::processData(const Packet &p)
+void DHudp::startSending()
 {
-    qDebug() << "TODO:  DHudp::processData() ";
+    qDebug() << "TODO: DHudp::startSending() to client"
+             << i_clientDataAddrs << ":" << i_clientDataListingPort;
+
+    //test
+    QByteArray a("Hello");
+    i_udpDataSkt->write(a);
 }
 
 }//namespace nProtocUDP

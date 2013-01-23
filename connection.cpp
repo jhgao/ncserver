@@ -1,7 +1,7 @@
 #include "connection.h"
 
 Connection::Connection(int socketDescriptor, QObject *parent) :
-    QTcpSocket(parent),packetSize(0),i_cmd_counter(0),i_dh(0),
+    QTcpSocket(parent),i_packetSize(0),i_cmd_counter(0),i_dh(0),
     i_protoc(PROTOC_NONE),i_socketDescriptor(socketDescriptor)
 {
     this->setSocketDescriptor(socketDescriptor);
@@ -17,12 +17,12 @@ Connection::Connection(int socketDescriptor, QObject *parent) :
 
 void Connection::onControlSktReadyRead()
 {
-    packetSize = 0;
+    i_packetSize = 0;
 
     //get packet size
     QDataStream in(this);
     in.setVersion(QDataStream::Qt_4_8);
-    if (packetSize == 0) {
+    if (i_packetSize == 0) {
         if (this->bytesAvailable() < (int)sizeof(quint16)){
             qDebug() << "\t E: packet size wrong"
                      << this->bytesAvailable()
@@ -30,15 +30,15 @@ void Connection::onControlSktReadyRead()
                      << (int)sizeof(quint16);;
             return;
         }
-        in >> packetSize;
+        in >> i_packetSize;
     }
 
     //ensure data size available
-    if (this->bytesAvailable() < packetSize){
+    if (this->bytesAvailable() < i_packetSize){
         qDebug() << "\t E: not enough data bytes"
                  << this->bytesAvailable()
                  << "/need "
-                 << packetSize;
+                 << i_packetSize;
         return;
     }
 
@@ -67,15 +67,16 @@ void Connection::processCMD(const Packet &p)
 {
     i_cmd_counter++;
 
-    QDataStream args(p.getCMDarg());
-    args.setVersion(QDataStream::Qt_4_8);
-
     switch(p.getCMD()){
     case DATALINK_DECLARE:
         psCmdDbg("DATALINK_DECLARE");
-        args >> i_protoc;
-        args >> i_protocArg;
-        this->processProtocolDeclare((eProtocTypes)i_protoc,i_protocArg);
+        if(p.getCMDarg().size() != 0){
+            QDataStream args(p.getCMDarg());
+            args.setVersion(QDataStream::Qt_4_8);
+            args >> i_protoc;
+            args >> i_protocArg;
+            this->processProtocolDeclare((eProtocTypes)i_protoc,i_protocArg);
+        }
         break;
     default:
         qDebug() << "\t unknown cmd" << p.getCMD();

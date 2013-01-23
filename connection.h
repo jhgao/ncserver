@@ -35,7 +35,7 @@ private:
     QString psCmdDbg(QString cmd, QString arg = QString());
     void processProtocolDeclare(eProtocTypes type, const QByteArray protocArg);
     int i_socketDescriptor;
-    quint16 packetSize; //for reading packet
+    quint16 i_packetSize; //for reading packet
     int i_cmd_counter;
 
     //protocol

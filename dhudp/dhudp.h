@@ -31,21 +31,24 @@ public slots:
 private slots:
     void onCmdSktReadyRead();
     void onCmdSktDisconnected();
+
 private:
     void writeOutCmd(quint16, const QByteArray& = QByteArray());
     void processCMD(const Packet& p);
     QString psCmdDbg(QString cmd, QString arg = QString());
-    void processData(const Packet& p);
 
     void startSending();
+
     QTcpSocket* i_tcpCmdSkt;
     int i_cmd_counter;
-
-    QString i_clientAddrs;
+    quint16 i_cmdPacketSize;   //used when nonblocking rcv
+    QString i_clientCmdAddrs;
     quint16 i_clientCmdListingPort;
 
-    quint16 i_cmdPacketSize;   //used when nonblocking rcv
-    quint16 i_dataPacketSize;   //used when nonblocking rcv
+    QUdpSocket* i_udpDataSkt;
+    QString i_clientDataAddrs;
+    quint16 i_clientDataListingPort;
+
     DHudpEncoder *i_encoder;
 };
 
