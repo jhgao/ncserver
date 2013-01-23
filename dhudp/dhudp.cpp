@@ -67,10 +67,6 @@ void DHudp::processCMD(const Packet &p)
     i_cmd_counter++;
 
     switch(p.getCMD()){
-    case CON_CONNECTING:
-        psCmdDbg("CON_CONNECTING");
-        writeOutCmd(CON_CONNECTED);
-        break;
     case CON_START:
         psCmdDbg("CON_START","TODO");
         break;
@@ -81,20 +77,14 @@ void DHudp::processCMD(const Packet &p)
         psCmdDbg("CON_CHG_CYC",
                  QString::number(QVariant(p.getCMDarg()).toUInt()));
         break;
-    case CON_START_REPEAT:
-        psCmdDbg("CON_START_REPEAT","TODO");
+    case ALA_DONE:
+        psCmdDbg("ALA_DONE","TODO");
         break;
-    case CON_STOP_REPEAT:
-        psCmdDbg("CON_STOP_REPEAT","TODO");
+    case QUE_DECODE_PARAM:
+        psCmdDbg("QUE_DECODE_PARAM","TODO");
         break;
-    case CON_DECODE_PARAM_REQ:
-        psCmdDbg("CON_DECODE_PARAM_REQ","TODO");
-        break;
-    case CON_BLOCKS_NUM_REQ:
-        psCmdDbg("CON_BLOCKS_NUM_REQ","TODO");
-        break;
-    case DATA_PORT_DECLARE:
-        psCmdDbg("DATALINK_PORT_DECLARE","TODO");
+    case ACK_DATA_PORT:
+        psCmdDbg("ACK_DATA_PORT","TODO");
         break;
     default:
         psCmdDbg(QString::number(p.getCMD()) + "?UNKNOWN" );
