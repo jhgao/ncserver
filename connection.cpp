@@ -1,21 +1,27 @@
 #include "connection.h"
 
 Connection::Connection(int socketDescriptor, QObject *parent) :
-    QTcpSocket(parent),packetSize(0),i_cmd_counter(0)
+    QTcpSocket(parent),packetSize(0),i_cmd_counter(0),i_dh(0),
+    i_protoc(PROTOC_NONE),i_socketDescriptor(socketDescriptor)
 {
     this->setSocketDescriptor(socketDescriptor);
     connect(this, SIGNAL(readyRead()),
             this, SLOT(onControlSktReadyRead()));
+    connect(this, SIGNAL(disconnected()),   //TODO: when to finish
+            this, SIGNAL(sig_ConnectionFinished()));
+
+    qDebug() << ">>> Connection() from "
+             << this->peerAddress().toString()
+             << " : " << this->peerPort();
 }
 
 void Connection::onControlSktReadyRead()
 {
-    qDebug() << "Connection::onControlSktReadyRead()";
     packetSize = 0;
 
     //get packet size
     QDataStream in(this);
-    in.setVersion(QDataStream::Qt_4_0);
+    in.setVersion(QDataStream::Qt_4_8);
     if (packetSize == 0) {
         if (this->bytesAvailable() < (int)sizeof(quint16)){
             qDebug() << "\t E: packet size wrong"
@@ -59,20 +65,54 @@ void Connection::onControlSktReadyRead()
 
 void Connection::processCMD(const Packet &p)
 {
-    qDebug() << "Connection::processCMD()" << p.getCMD();
     i_cmd_counter++;
 
+    QDataStream args(p.getCMDarg());
+    args.setVersion(QDataStream::Qt_4_8);
+
     switch(p.getCMD()){
-    case CON_CONNECTING:
-        psCmdDbg("CON_CONNECTING");
-        writeOutCMD(CON_CONNECTED);
+    case DATALINK_DECLARE:
+        psCmdDbg("DATALINK_DECLARE");
+        args >> i_protoc;
+        args >> i_protocArg;
+        this->processProtocolDeclare((eProtocTypes)i_protoc,i_protocArg);
         break;
     default:
         qDebug() << "\t unknown cmd" << p.getCMD();
     }
 }
 
-void Connection::writeOutCMD(eControl_CMD cmd, QByteArray arg)
+bool Connection::initDataHandler(eProtocTypes type, const QByteArray protocArg)
+{
+    switch( type){
+    case PROTOC_NONE:
+        qDebug() << "\t protoc none";
+        return false;
+        break;
+    case PROTOC_TCP:
+        i_dh = new nProtocTCP::DHtcp(protocArg,this);
+        break;
+    case PROTOC_UDP:
+        i_dh = new nProtocUDP::DHudp(protocArg,this);
+        break;
+    default:
+        qDebug() << "\t unknown protoc type" << type;
+        return false;
+    }
+    if( !i_dh ) return false;
+
+    if( i_dh->isInitOk() ){   //init dh success
+        connect(i_dh, SIGNAL(sig_writeOutCmd(quint16,QByteArray)),
+                this, SLOT(writeOutCMD(quint16,QByteArray)));
+
+        return true;
+    }else{  //init dh failed
+        qDebug() << "\t Err: DH init failed";
+        return false;
+    }
+}
+
+void Connection::writeOutCMD(quint16 cmd, const QByteArray arg)
 {
     if(!this->isWritable()) return;
 
@@ -83,7 +123,7 @@ void Connection::writeOutCMD(eControl_CMD cmd, QByteArray arg)
 QString Connection::psCmdDbg(QString cmd, QString arg)
 {
     QString dbg;
-    dbg = " cmd " + QString::number(i_cmd_counter);
+    dbg = "Connection got CMD " + QString::number(i_cmd_counter);
     dbg += " [" + cmd + "] ";
     dbg += arg;
     dbg += "\tfrom " + this->peerAddress().toString()
@@ -91,4 +131,22 @@ QString Connection::psCmdDbg(QString cmd, QString arg)
 
     qDebug() << dbg;
     return dbg;
+}
+
+void Connection::processProtocolDeclare(eProtocTypes type, const QByteArray protocArg)
+{
+    /* init datahandler */
+    QByteArray protocAckArg;
+    if( initDataHandler(type,protocArg )){
+        protocAckArg = i_dh->getInitProtocAckArg();
+
+        /* gen ack ( CMD , (protocol , protocl arugments)) */
+        QByteArray ack;
+        QDataStream out(&ack,QIODevice::WriteOnly);
+        out << (quint16) type;
+        out << protocAckArg;
+        writeOutCMD(DATALINK_DECLARE_ACK,ack);
+    }else{
+        this->abort();
+    }
 }

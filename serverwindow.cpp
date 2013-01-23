@@ -7,6 +7,10 @@ ServerWindow::ServerWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    connect(ui->lineEdit_rawFile, SIGNAL(gotLocalFileUrlList(QList<QUrl>)),
+            this, SLOT(setEncoderRawFiles(QList<QUrl>)));
+
+    ui->lineEdit_rawFile->setText(RAW_FILE);
     ServerConfig::get_instance()->setRawFileName(RAW_FILE);
 
     qDebug() << QCoreApplication::applicationDirPath();
@@ -40,6 +44,13 @@ ServerWindow::ServerWindow(QWidget *parent) :
 ServerWindow::~ServerWindow()
 {
     delete ui;
+}
+
+void ServerWindow::setEncoderRawFiles(QList<QUrl> urlList)
+{
+    if( urlList.size() > 0){
+       ServerConfig::get_instance()->setRawFileName(urlList[0].toLocalFile());
+    }
 }
 
 void ServerWindow::showListeningPort(QString ip, quint16 port)

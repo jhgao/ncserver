@@ -9,7 +9,11 @@
 #ifndef PROTOCOLTYPES_H
 #define PROTOCOLTYPES_H
 
+/*
+ * (quint16) supports up to 65535 types
+ */
 enum eProtocTypes{
+    PROTOC_NONE,
     PROTOC_UDP,  //data:UDP, coding:NC
     PROTOC_TCP   //data:TCP, coding:none
 };

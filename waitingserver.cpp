@@ -10,18 +10,18 @@ void WaitingServer::incomingConnection(int socketDescriptor)
     qDebug() << "WaitingServer::incomingConnection()";
     icount++;
 
-    Connection* pCon = new Connection(socketDescriptor,this);
-    listOfConnections.append(pCon);
-    connect(pCon,SIGNAL(sig_ConnectionFinished(Connection*)),
-            this,SLOT(onConnectionFinished(Connection*)));
+    ConnectionThread* ct = new ConnectionThread(socketDescriptor,this);
+    listOfConThreads.append(ct);
+    connect(ct, SIGNAL(sig_ConnectionFinished(ConnectionThread*)),
+            this, SLOT(onConnectionFinished(ConnectionThread*)));
+    ct->start();    //TODO: priority
 
-    qDebug() << "\t working link:" << listOfConnections.size()
-             << " / in count" << icount
-             << "\t" << pCon->peerAddress().toString()
-             << ":" << pCon->peerPort();
+    qDebug() << "\t working link / incoming count: "
+             << listOfConThreads.size()
+             << "/" << icount;
 }
 
-void WaitingServer::onConnectionFinished(Connection *con)
+void WaitingServer::onConnectionFinished(ConnectionThread *ct)
 {
-    listOfConnections.removeOne(con);
+    listOfConThreads.removeOne(ct);
 }

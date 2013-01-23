@@ -1,11 +1,11 @@
 #include "packet.h"
 
-Packet::Packet(eControl_CMD cmd, QByteArray arg):
+Packet::Packet(quint16 cmd, const QByteArray arg):
     i_type(PTYPE_CMD),i_cmd(cmd),i_cmd_arg(arg)
 {
 }
 
-Packet::Packet(QByteArray &data) :
+Packet::Packet(const QByteArray &data) :
     i_type(PTYPE_DATA),i_data(data)
 {
 }
@@ -18,7 +18,7 @@ const QByteArray &Packet::genPacket()
 {
     i_payload.clear();
     QDataStream payloads(&i_payload, QIODevice::WriteOnly);
-    payloads.setVersion(QDataStream::Qt_4_0);
+    payloads.setVersion(QDataStream::Qt_4_8);
     switch(i_type){
     case PTYPE_CMD:
         payloads << (quint16)PTYPE_CMD;  //data: packate type
@@ -35,7 +35,7 @@ const QByteArray &Packet::genPacket()
 
     i_packet.clear();
     QDataStream out(&i_packet, QIODevice::WriteOnly);
-    out.setVersion(QDataStream::Qt_4_0);
+    out.setVersion(QDataStream::Qt_4_8);
     out << (quint16)0;  //preserve for packet size
     out << i_payload;
     out.device()->seek(0);
@@ -48,8 +48,8 @@ bool Packet::fromPacket(QByteArray a)
 {
     i_packet = a;
     quint16 blockSize;
-    QDataStream in(&i_packet,QIODevice::ReadOnly);
-    in.setVersion(QDataStream::Qt_4_0);
+    QDataStream in(i_packet);
+    in.setVersion(QDataStream::Qt_4_8);
     in >> blockSize;
 
     if( (quint16)a.size()-sizeof(quint16) < blockSize)
@@ -63,17 +63,14 @@ bool Packet::fromPacket(QByteArray a)
 bool Packet::fromPayload(QByteArray a)
 {
     i_payload = a;
-    quint16 type, cmd;
-    QDataStream in(&i_payload,QIODevice::ReadOnly);
-    in.setVersion(QDataStream::Qt_4_0);
-    in >> type;
-    i_type = (ePacketType)type;
+    QDataStream in(i_payload);
+    in.setVersion(QDataStream::Qt_4_8);
+    in >> i_type;
 
     switch(i_type){
     case PTYPE_CMD:
-        in >> cmd;
+        in >> i_cmd;
         in >> i_cmd_arg;
-        i_cmd = (eControl_CMD)cmd;
         break;
     case PTYPE_DATA:
         in >> i_data;
@@ -84,35 +81,12 @@ bool Packet::fromPayload(QByteArray a)
     return true;
 }
 
-QString Packet::toString()
-{
-    QString s;
-    switch(i_type){
-    case PTYPE_CMD:
-        switch (i_cmd){
-        case CON_CONNECTED: s = "CON_CONNECTED"; break;
-        case CON_CONNECTING: s = "CON_CONNECTIONG"; break;
-        case CON_D5F: s = "CON_D5F"; break;
-        case CON_D5FACK: s = "CON_D5FACK"; break;
-        case CON_NEXT: s = "CON_NEXT"; break;
-        case CON_START: s = "START"; break;
-        }
-        return s;
-        break;
-    case PTYPE_DATA:
-        return QString(i_data.toHex());
-        break;
-    default:
-        return QString();
-    }
-}
-
-ePacketType Packet::getType() const
+quint16 Packet::getType() const
 {
     return i_type;
 }
 
-eControl_CMD Packet::getCMD()const
+quint16 Packet::getCMD()const
 {
     return i_cmd;
 }
@@ -125,4 +99,26 @@ QByteArray Packet::getCMDarg()const
 QByteArray Packet::getData() const
 {
     return i_data;
+}
+
+QString Packet::dbgString() const
+{
+    QString s("Packet:");
+    switch(i_type){
+    case PTYPE_CMD:
+        s+="CMD";
+        s+=" ["+ QString::number(i_cmd) + "]";
+        s+=" arg";
+        s+= i_cmd_arg.toHex();
+        s+=" i_data size" + QString::number(i_data.size());
+        s+=" i_payload size" + QString::number(i_payload.size());
+        s+=" i_packet size" + QString::number(i_packet.size());
+        break;
+    case PTYPE_DATA: s+="DATA";
+        s+=" i_data size" + QString::number(i_data.size());
+        s+=" i_payload size" + QString::number(i_payload.size());
+        s+=" i_packet size" + QString::number(i_packet.size());
+        break;
+    }
+    return s;
 }
