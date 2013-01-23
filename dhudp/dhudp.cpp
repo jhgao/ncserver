@@ -7,11 +7,15 @@ DHudp::DHudp(const QByteArray arg, QObject *parent) :
     DataHandler(parent),i_encoder(0),
     i_tcpCmdSkt(0),i_cmd_counter(0),i_cmdPacketSize(0),
     i_udpDataSkt(0),
-    i_clientCmdListingPort(0),i_clientDataListingPort(0)
+    i_clientCmdListingPort(0),i_clientDataListingPort(0),
+    i_sendFragsTimer(0)
 {
     i_tcpCmdSkt = new QTcpSocket(this);
     i_udpDataSkt = new QUdpSocket(this);
     i_encoder = new DHudpEncoder(this);
+    i_sendFragsTimer = new QTimer(this);
+    connect(i_sendFragsTimer, SIGNAL(timeout()),
+            this, SLOT(sendCurrentCycleFrags()));
 
     ServerConfig* sc = ServerConfig::get_instance();
     i_encoder->setRawFile(sc->getRawFileName());
@@ -97,6 +101,14 @@ void DHudp::onCmdSktReadyRead()
 
 void DHudp::onCmdSktDisconnected()
 {
+    i_sendFragsTimer->stop();
+}
+
+void DHudp::sendCurrentCycleFrags()
+{
+    i_sendFragsTimer->stop();
+    //TODO send frags
+    i_sendFragsTimer->start();
 }
 
 void DHudp::writeOutCmd(quint16 cmd, const QByteArray &arg)
@@ -136,7 +148,8 @@ void DHudp::processCMD(const Packet &p)
                  QString::number(QVariant(p.getCMDarg()).toUInt()));
         break;
     case ALA_DONE:
-        psCmdDbg("ALA_DONE","TODO");
+        psCmdDbg("ALA_DONE");
+        i_sendFragsTimer->stop();
         break;
     case QUE_DECODE_PARAM:
         psCmdDbg("QUE_DECODE_PARAM");
@@ -171,9 +184,7 @@ void DHudp::startSending()
     qDebug() << "TODO: DHudp::startSending() to client"
              << i_clientDataAddrs << ":" << i_clientDataListingPort;
 
-    //test
-    QByteArray a("Hello");
-    i_udpDataSkt->write(a);
+    i_sendFragsTimer->start(SEND_FRAGMENT_INTERVAL);
 }
 
 }//namespace nProtocUDP

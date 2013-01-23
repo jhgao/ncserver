@@ -32,6 +32,7 @@ private slots:
     void onCmdSktReadyRead();
     void onCmdSktDisconnected();
 
+    void sendCurrentCycleFrags();
 private:
     void writeOutCmd(quint16, const QByteArray& = QByteArray());
     void processCMD(const Packet& p);
@@ -50,6 +51,7 @@ private:
     quint16 i_clientDataListingPort;
 
     DHudpEncoder *i_encoder;
+    QTimer *i_sendFragsTimer;
 };
 
 }//namespace nProtocUDP
