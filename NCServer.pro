@@ -24,7 +24,8 @@ SOURCES += main.cpp\
     connectionthread.cpp \
     gui/droplineedit.cpp \
     dhtcp/dhtcpencoder.cpp \
-    protocol/rawblock.cpp
+    protocol/rawblock.cpp \
+    dhudp/dhudpencoder.cpp
 
 HEADERS  += serverwindow.h \
     waitingserver.h \
@@ -41,6 +42,8 @@ HEADERS  += serverwindow.h \
     dhtcp/dhtcpprotocol.h \
     gui/droplineedit.h \
     dhtcp/dhtcpencoder.h \
-    protocol/rawblock.h
+    protocol/rawblock.h \
+    dhudp/dhudpencoder.h \
+    dhudp/dhudpprotocol.h
 
 FORMS    += serverwindow.ui

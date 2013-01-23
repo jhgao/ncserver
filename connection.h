@@ -28,7 +28,7 @@ private slots:
     void processCMD(const Packet& p);
     bool initDataHandler(eProtocTypes type, const QByteArray protocArg);
 
-    void writeOutCMD(eControl_CMD cmd,
+    void writeOutCMD(quint16 cmd,
                      const QByteArray arg = QByteArray());
 
 private:

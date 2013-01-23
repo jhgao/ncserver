@@ -36,7 +36,7 @@ private:
     void processData(const Packet& p);
     bool waitSendCurrentBlock();
     bool sendFileBlocking();
-    void writeOutCmd(eCMD, const QByteArray& = QByteArray());
+    void writeOutCmd(quint16, const QByteArray& = QByteArray());
     void sendStartRequest();
     QString i_clientAddrs;
     quint16 i_clientDataPort;

@@ -102,8 +102,8 @@ bool Connection::initDataHandler(eProtocTypes type, const QByteArray protocArg)
     if( !i_dh ) return false;
 
     if( i_dh->isInitOk() ){   //init dh success
-        connect(i_dh, SIGNAL(sig_writeOutCmd(eControl_CMD,QByteArray)),
-                this, SLOT(writeOutCMD(eControl_CMD,QByteArray)));
+        connect(i_dh, SIGNAL(sig_writeOutCmd(quint16,QByteArray)),
+                this, SLOT(writeOutCMD(quint16,QByteArray)));
 
         return true;
     }else{  //init dh failed
@@ -112,7 +112,7 @@ bool Connection::initDataHandler(eProtocTypes type, const QByteArray protocArg)
     }
 }
 
-void Connection::writeOutCMD(eControl_CMD cmd, const QByteArray arg)
+void Connection::writeOutCMD(quint16 cmd, const QByteArray arg)
 {
     if(!this->isWritable()) return;
 

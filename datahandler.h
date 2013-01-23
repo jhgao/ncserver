@@ -18,12 +18,12 @@ public:
     virtual QByteArray getInitProtocAckArg() = 0;
     virtual bool isInitOk() = 0;
 signals:
-    void sig_writeOutCmd(eControl_CMD,QByteArray);
+    void sig_writeOutCmd(quint16,QByteArray);
     
 public slots:
 protected:
     /* signal parent object to write out CMD */
-    void sigWriteOutCmd(eControl_CMD, const QByteArray);
+    void sigWriteOutCmd(quint16, const QByteArray);
 };
 
 #endif // DATAHANDLER_H

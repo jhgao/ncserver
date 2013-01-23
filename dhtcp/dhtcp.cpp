@@ -164,7 +164,7 @@ bool DHtcp::sendFileBlocking()
     return true;
 }
 
-void DHtcp::writeOutCmd(eCMD cmd, const QByteArray &arg)
+void DHtcp::writeOutCmd(quint16 cmd, const QByteArray &arg)
 {
     if(!i_tcpDataSkt) return;
 
