@@ -4,36 +4,36 @@
 namespace nProtocUDP{
 
 DHudp::DHudp(const QByteArray arg, QObject *parent) :
-    DataHandler(parent),i_tcpCmdServer(0),i_tcpCmdSkt(0),
+    DataHandler(parent),i_tcpCmdSkt(0),
     i_cmd_counter(0),i_cmdPacketSize(0),i_dataPacketSize(0),
     i_encoder(0)
 {
-    qDebug() << "DHudp::DHudp()";
-    i_tcpCmdServer = new QTcpServer(this);
-    if (!i_tcpCmdServer->listen(QHostAddress::Any,0)) {
-        qDebug() << "DHudp listen cmd port failed";
-        exit(-1);
+    i_tcpCmdSkt = new QTcpSocket(this);
+    i_encoder = new DHudpEncoder(this);
+
+    ServerConfig* sc = ServerConfig::get_instance();
+    i_encoder->setRawFile(sc->getRawFileName());
+
+    QDataStream in(arg);
+    in.setVersion(QDataStream::Qt_4_8);
+    in >> i_clientAddrs;
+    in >> i_clientCmdListingPort;
+
+    qDebug() << "DHudp::DHudp() new UDP client wating at "
+             << i_clientAddrs
+             << ":" << i_clientCmdListingPort;
+
+    i_tcpCmdSkt->connectToHost(QHostAddress(i_clientAddrs),
+                               i_clientCmdListingPort);
+
+    if( i_tcpCmdSkt->waitForConnected(WAIT_FOR_CONNECTED_TIMEOUT) ){
+        connect(i_tcpCmdSkt,SIGNAL(readyRead()),
+                this, SLOT(onCmdSktReadyRead()));
+        connect(i_tcpCmdSkt,SIGNAL(disconnected()),
+                this, SLOT(onCmdSktDisconnected()));
+    }else{
+        qDebug() << "\t Err: can not connect to client";
     }
-
-    QList<QHostAddress> ipAddressesList = QNetworkInterface::allAddresses();
-    // use the first non-localhost IPv4 address
-    for (int i = 0; i < ipAddressesList.size(); ++i) {
-        if (ipAddressesList.at(i) != QHostAddress::LocalHost &&
-            ipAddressesList.at(i).toIPv4Address()) {
-            i_ipAddress = ipAddressesList.at(i).toString();
-            break;
-        }
-    }
-    // if we did not find one, use IPv4 localhost
-    if (i_ipAddress.isEmpty())
-        i_ipAddress = QHostAddress(QHostAddress::LocalHost).toString();
-
-    qDebug() << "\n DHudp is listening cmd at" << i_ipAddress
-             << ":" << i_tcpCmdServer->serverPort();
-
-    connect(i_tcpCmdServer, SIGNAL(newConnection()),
-            this, SLOT(onIncomingTcpCmdConnection()));
-
 }
 
 QByteArray DHudp::getInitProtocAckArg()
@@ -46,61 +46,12 @@ bool DHudp::isInitOk()
     return true;
 }
 
-void DHudp::onIncomingTcpCmdConnection()
-{
-    if( i_tcpCmdServer->hasPendingConnections()){
-        i_tcpCmdSkt = i_tcpCmdServer->nextPendingConnection();
-        qDebug() << "DHudp::onIncomingTcpCmdConnection()";
-        //TODO check incoming identity
-        connect(i_tcpCmdSkt, SIGNAL(readyRead()),
-                this, SLOT(onCmdSktReadyRead()));
-        connect(i_tcpCmdSkt, SIGNAL(disconnected()),
-                this, SLOT(onCmdSktDisconnected()));
-    }
-}
-
 void DHudp::onCmdSktReadyRead()
 {
-    //get packet size
-    QDataStream in(i_tcpCmdSkt);
-    in.setVersion(QDataStream::Qt_4_8);
-    if (i_cmdPacketSize == 0) {
-        if (i_tcpCmdSkt->bytesAvailable() < (int)sizeof(quint16)){
-            return;
-        }
-        in >> i_cmdPacketSize;
-    }
-
-    //ensure data size available
-    if (i_tcpCmdSkt->bytesAvailable() < i_cmdPacketSize){
-        return;
-    }
-
-    //read in data
-    QByteArray payloadArrey;
-    in >> payloadArrey;
-
-    //analyze payload
-    Packet p;
-    if( p.fromPayload(payloadArrey)){
-        switch(p.getType()){
-        case PTYPE_CMD:
-            processCMD(p);
-            break;
-        case PTYPE_DATA:
-            processData(p);
-            break;
-        default:
-            qDebug() << "\t unknown packet type";
-        }
-    }
-
-    i_cmdPacketSize = 0;
 }
 
 void DHudp::onCmdSktDisconnected()
 {
-    qDebug() << "DHudp::onCmdSktDisconnected()";
 }
 
 void DHudp::writeOutCmd(quint16 cmd, const QByteArray &arg)

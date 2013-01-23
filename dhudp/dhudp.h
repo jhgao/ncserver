@@ -7,11 +7,15 @@
 #include "datahandler.h"
 #include "protocol/cmd_define.h"
 #include "protocol/packet.h"
+#include "serverconfig.h"
 
 #include "dhudpprotocol.h"
 #include "dhudpencoder.h"
 
 namespace nProtocUDP{
+
+static const int WAIT_FOR_CONNECTED_TIMEOUT  = 5000;
+static const int WAIT_FOR_BYTES_WRITTEN_TIMEOUT = 5000;
 
 class DHudp : public DataHandler
 {
@@ -20,11 +24,11 @@ public:
     explicit DHudp(const QByteArray arg, QObject *parent = 0);
     QByteArray getInitProtocAckArg();
     bool isInitOk();
+
 signals:
     
 public slots:
-    void onIncomingTcpCmdConnection();
-
+private slots:
     void onCmdSktReadyRead();
     void onCmdSktDisconnected();
 private:
@@ -34,10 +38,11 @@ private:
     void processData(const Packet& p);
 
     void startSending();
-    QTcpServer* i_tcpCmdServer;
-    QString i_ipAddress;    //local ip
     QTcpSocket* i_tcpCmdSkt;
     int i_cmd_counter;
+
+    QString i_clientAddrs;
+    quint16 i_clientCmdListingPort;
 
     quint16 i_cmdPacketSize;   //used when nonblocking rcv
     quint16 i_dataPacketSize;   //used when nonblocking rcv

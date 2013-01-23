@@ -14,8 +14,8 @@
 
 namespace nProtocTCP{
 
-#define WAIT_FOR_CONNECTED_TIMEOUT 5000
-#define WAIT_FOR_BYTES_WRITTEN_TIMEOUT (5000)  //5s
+static const int  WAIT_FOR_CONNECTED_TIMEOUT = 5000;
+static const int  WAIT_FOR_BYTES_WRITTEN_TIMEOUT = 5000;  //5s
 
 class DHtcp : public DataHandler
 {
