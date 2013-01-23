@@ -113,7 +113,7 @@ void DHudp::processCMD(const Packet &p)
 
     switch(p.getCMD()){
     case CON_START:
-        psCmdDbg("CON_START","TODO");
+        psCmdDbg("CON_START");
         if(p.getCMDarg().size() != 0){
             QDataStream args(p.getCMDarg());
             args.setVersion(QDataStream::Qt_4_8);
@@ -139,7 +139,11 @@ void DHudp::processCMD(const Packet &p)
         psCmdDbg("ALA_DONE","TODO");
         break;
     case QUE_DECODE_PARAM:
-        psCmdDbg("QUE_DECODE_PARAM","TODO");
+        psCmdDbg("QUE_DECODE_PARAM");
+        if(i_encoder){
+            this->writeOutCmd(ACK_DECODE_PARAM,
+                              i_encoder->getDecoderParameters());
+        }
         break;
     case ACK_DATA_PORT:
         psCmdDbg("ACK_DATA_PORT","TODO");

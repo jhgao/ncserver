@@ -3,6 +3,8 @@
 
 #include <QObject>
 #include <QFileInfo>
+#include "decparams.h"
+#include "dhudpprotocol.h"
 
 namespace nProtocUDP{
 class DHudpEncoder : public QObject
@@ -11,6 +13,8 @@ class DHudpEncoder : public QObject
 public:
     explicit DHudpEncoder(QObject *parent = 0);
     bool setRawFile(QString absPath);
+    QByteArray getDecoderParameters() const;
+    quint64 getRawFileBlockNum() const;
     
 signals:
     
