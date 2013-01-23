@@ -1,6 +1,6 @@
 #include "dhtcp.h"
 
-namespace DHtcp{
+namespace nProtocTCP{
 
 DHtcp::DHtcp(const QByteArray arg, QObject *parent) :
     DataHandler(parent),i_cmd_counter(0),

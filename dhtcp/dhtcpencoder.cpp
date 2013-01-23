@@ -1,7 +1,7 @@
 #include "dhtcpencoder.h"
 #include <QDebug>
 
-namespace DHtcp{
+namespace nProtocTCP{
 DHtcpEncoder::DHtcpEncoder(QObject *parent) :
     QObject(parent),i_isReady(false)
 {

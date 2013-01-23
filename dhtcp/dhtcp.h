@@ -12,7 +12,7 @@
 #include "dhtcpprotocol.h"
 #include "dhtcpencoder.h"
 
-namespace DHtcp{
+namespace nProtocTCP{
 
 #define WAIT_FOR_CONNECTED_TIMEOUT 5000
 #define WAIT_FOR_BYTES_WRITTEN_TIMEOUT (5000)  //5s

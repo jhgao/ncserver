@@ -90,10 +90,10 @@ bool Connection::initDataHandler(eProtocTypes type, const QByteArray protocArg)
         return false;
         break;
     case PROTOC_TCP:
-        i_dh = new DHtcp::DHtcp(protocArg,this);
+        i_dh = new nProtocTCP::DHtcp(protocArg,this);
         break;
     case PROTOC_UDP:
-        i_dh = new DHudp::DHudp(protocArg,this);
+        i_dh = new nProtocUDP::DHudp(protocArg,this);
         break;
     default:
         qDebug() << "\t unknown protoc type" << type;

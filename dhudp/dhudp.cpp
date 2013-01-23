@@ -1,6 +1,6 @@
 #include "dhudp.h"
 
-namespace DHudp{
+namespace nProtocUDP{
 
 DHudp::DHudp(const QByteArray arg, QObject *parent) :
     DataHandler(parent)

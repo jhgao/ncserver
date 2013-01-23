@@ -6,7 +6,7 @@
 #include "datahandler.h"
 #include "protocol/cmd_define.h"
 
-namespace DHudp{
+namespace nProtocUDP{
 
 class DHudp : public DataHandler
 {

@@ -9,7 +9,7 @@
 
 #define RAW_BLOCK_SIZE (1000) //packet payload size
 
-namespace DHtcp{
+namespace nProtocTCP{
 class DHtcpEncoder : public QObject
 {
     Q_OBJECT
