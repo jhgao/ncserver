@@ -112,6 +112,8 @@ QByteArray DHudpEncoder::getDecoderParameters() const
     p.inBlockCoeffLen = this->getRawFileBlockNum();
     p.inBlockDataSize = ENC_BLOCK_SIZE;
     p.totalEncBlocks = this->getRawFileBlockNum();
+    p.oneCycleBlockNum = ONE_CYCLE_BLOCKS;
+    p.totalCycleNum = this->getTotalCycleNum();
     return p.toArray();
 }
 
@@ -125,9 +127,9 @@ quint32 DHudpEncoder::getTotalCycleNum() const
     return (getRawFileBlockNum() + ONE_CYCLE_BLOCKS - 1) / ONE_CYCLE_BLOCKS;
 }
 
-quint8 DHudpEncoder::blockNumInCycle(quint32 cyc) const
+quint32 DHudpEncoder::blockNumInCycle(quint32 cyc) const
 {
-    quint8 n;
+    quint32 n;
     if( cyc + 1 < getTotalCycleNum()
             || 0 == getRawFileBlockNum() % ONE_CYCLE_BLOCKS){
          n = ONE_CYCLE_BLOCKS;

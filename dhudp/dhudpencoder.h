@@ -37,7 +37,7 @@ public:
     QByteArray getDecoderParameters() const;
     quint64 getRawFileBlockNum() const;
     quint32 getTotalCycleNum() const;
-    quint8 blockNumInCycle(quint32) const;
+    quint32 blockNumInCycle(quint32) const;
 signals:
     
 public slots:
