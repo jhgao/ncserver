@@ -11,11 +11,13 @@
 
 #include "dhudpprotocol.h"
 #include "dhudpencoder.h"
+#include "fragment.h"
 
 namespace nProtocUDP{
 
 static const int WAIT_FOR_CONNECTED_TIMEOUT  = 5000;
 static const int WAIT_FOR_BYTES_WRITTEN_TIMEOUT = 5000;
+static const QString CACHE_LOG_FILE = "dhudp.outcache";
 
 class DHudp : public DataHandler
 {
@@ -35,10 +37,19 @@ private slots:
     void sendCurrentCycleFrags();
 private:
     void writeOutCmd(quint16, const QByteArray& = QByteArray());
+    void writeOutData(const QByteArray a);
     void processCMD(const Packet& p);
     QString psCmdDbg(QString cmd, QString arg = QString());
 
     void startSending();
+    void stopSending();
+    void toNextCycle();
+    void toCycle(quint32);
+
+    void genCycleBlocks();  //encode
+    void genCycleFragments();
+
+    bool touch(QString);
 
     QTcpSocket* i_tcpCmdSkt;
     int i_cmd_counter;
@@ -52,6 +63,15 @@ private:
 
     DHudpEncoder *i_encoder;
     QTimer *i_sendFragsTimer;
+
+    //
+    bool i_isSending;
+    quint32 i_cyc;      //current cycle number
+    QList<QByteArray> i_cycleFragments;
+    QList<QByteArray> i_cycleBlocks;
+
+    //log
+    QFile i_outCacheLogFile;
 };
 
 }//namespace nProtocUDP

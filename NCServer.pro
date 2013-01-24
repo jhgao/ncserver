@@ -26,7 +26,12 @@ SOURCES += main.cpp\
     dhtcp/dhtcpencoder.cpp \
     protocol/rawblock.cpp \
     dhudp/dhudpencoder.cpp \
-    dhudp/decparams.cpp
+    dhudp/decparams.cpp \
+    dhudp/fragment.cpp \
+    dhudp/clib/randomlib.c \
+    dhudp/clib/nc.c \
+    dhudp/clib/matrix.c \
+    dhudp/clib/gf256.c
 
 HEADERS  += serverwindow.h \
     waitingserver.h \
@@ -46,6 +51,11 @@ HEADERS  += serverwindow.h \
     protocol/rawblock.h \
     dhudp/dhudpencoder.h \
     dhudp/dhudpprotocol.h \
-    dhudp/decparams.h
+    dhudp/decparams.h \
+    dhudp/fragment.h \
+    dhudp/clib/randomlib.h \
+    dhudp/clib/nc.h \
+    dhudp/clib/matrix.h \
+    dhudp/clib/gf256.h
 
 FORMS    += serverwindow.ui

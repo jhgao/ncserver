@@ -6,19 +6,22 @@ namespace nProtocUDP{
 DHudp::DHudp(const QByteArray arg, QObject *parent) :
     DataHandler(parent),i_encoder(0),
     i_tcpCmdSkt(0),i_cmd_counter(0),i_cmdPacketSize(0),
-    i_udpDataSkt(0),
     i_clientCmdListingPort(0),i_clientDataListingPort(0),
-    i_sendFragsTimer(0)
+    i_udpDataSkt(0),i_cyc(0),i_sendFragsTimer(0),
+    i_isSending(false)
 {
     i_tcpCmdSkt = new QTcpSocket(this);
     i_udpDataSkt = new QUdpSocket(this);
+
     i_encoder = new DHudpEncoder(this);
+    ServerConfig* sc = ServerConfig::get_instance();
+    i_encoder->setRawFile(sc->getRawFileName());
+    i_encoder->initClib(sc->getRawFileName());
+
     i_sendFragsTimer = new QTimer(this);
     connect(i_sendFragsTimer, SIGNAL(timeout()),
             this, SLOT(sendCurrentCycleFrags()));
 
-    ServerConfig* sc = ServerConfig::get_instance();
-    i_encoder->setRawFile(sc->getRawFileName());
 
     QDataStream in(arg);
     in.setVersion(QDataStream::Qt_4_8);
@@ -39,6 +42,11 @@ DHudp::DHudp(const QByteArray arg, QObject *parent) :
                 this, SLOT(onCmdSktDisconnected()));
     }else{
         qDebug() << "\t Err: can not connect to client";
+    }
+
+    i_outCacheLogFile.setFileName(CACHE_LOG_FILE);
+    if(!touch(i_outCacheLogFile.fileName())){
+        qDebug() << "\t failed create cache log file";
     }
 }
 
@@ -101,14 +109,23 @@ void DHudp::onCmdSktReadyRead()
 
 void DHudp::onCmdSktDisconnected()
 {
-    i_sendFragsTimer->stop();
+    this->stopSending();
 }
 
 void DHudp::sendCurrentCycleFrags()
 {
-    i_sendFragsTimer->stop();
-    //TODO send frags
-    i_sendFragsTimer->start();
+    i_sendFragsTimer->stop();   //pause
+
+    if( i_cycleFragments.isEmpty() ){
+        this->genCycleBlocks();
+        this->genCycleFragments();
+    }
+
+    for(int i = 0; i< i_cycleFragments.size(); ++i){
+        this->writeOutData(i_cycleFragments.at(i));
+    }
+
+    i_sendFragsTimer->start();  //resume
 }
 
 void DHudp::writeOutCmd(quint16 cmd, const QByteArray &arg)
@@ -117,6 +134,22 @@ void DHudp::writeOutCmd(quint16 cmd, const QByteArray &arg)
 
     Packet p(cmd,arg);
     i_tcpCmdSkt->write(p.genPacket());
+}
+
+void DHudp::writeOutData(const QByteArray a)
+{
+    if(i_udpDataSkt){
+        Packet p(a);
+        QByteArray dg = p.genPacket();  //dg:datagram
+        quint64 wroteSize = i_udpDataSkt->write(dg,dg.size());
+
+        if( wroteSize != dg.size() )
+        qDebug() << "Connection::writeOutData() _wrote out wrong size"
+                 << wroteSize << "/" << dg.size();
+    }
+    else{
+        qDebug() << "Connection::writeOutData() _no socket available";
+    }
 }
 
 void DHudp::processCMD(const Packet &p)
@@ -141,11 +174,17 @@ void DHudp::processCMD(const Packet &p)
         }
         break;
     case CON_NEXT:
-        psCmdDbg("CON_NEXT","TODO");
+        psCmdDbg("CON_NEXT");
+        this->toNextCycle();
         break;
     case CON_CHG_CYC:
         psCmdDbg("CON_CHG_CYC",
-                 QString::number(QVariant(p.getCMDarg()).toUInt()));
+                 QString::number(
+                     QVariant(p.getCMDarg()).toULongLong()));
+        if(p.getCMDarg().size() != 0){
+            qlonglong tgtCyc = QVariant(p.getCMDarg()).toULongLong();
+            this->toCycle(tgtCyc);
+        }
         break;
     case ALA_DONE:
         psCmdDbg("ALA_DONE");
@@ -181,10 +220,128 @@ QString DHudp::psCmdDbg(QString cmd, QString arg)
 
 void DHudp::startSending()
 {
-    qDebug() << "TODO: DHudp::startSending() to client"
+    qDebug() << "DHudp::startSending() to"
              << i_clientDataAddrs << ":" << i_clientDataListingPort;
-
+    i_isSending = true;
     i_sendFragsTimer->start(SEND_FRAGMENT_INTERVAL);
+}
+
+void DHudp::stopSending()
+{
+    qDebug() << "DHudp::stopSending()";
+    i_sendFragsTimer->stop();
+    i_isSending = false;
+}
+
+void DHudp::toNextCycle()
+{
+    i_sendFragsTimer->stop();
+
+    quint32 tgtCyc = i_cyc + 1;
+    quint32 lastCyc = i_encoder->getTotalCycleNum() -1;
+
+    if( tgtCyc > lastCyc ){
+        this->writeOutCmd(ALA_LAST_CYCLE);
+    }else{
+        ++i_cyc;
+        this->genCycleBlocks();
+        this->genCycleFragments();
+    }
+
+    if(i_isSending) this->startSending();
+}
+
+void DHudp::toCycle(quint32 tgtCyc)
+{
+    i_sendFragsTimer->stop();
+
+    quint32 lastCyc = i_encoder->getTotalCycleNum() -1;
+    if( tgtCyc > lastCyc ){
+        qDebug() << "DHudp::toCycle() out of range";
+    }else{
+        ++i_cyc;
+        this->genCycleBlocks();
+        this->genCycleFragments();
+    }
+
+    if(i_isSending) this->startSending();
+}
+
+void DHudp::genCycleBlocks()
+{
+    quint32 baseNumber = i_cyc * ONE_CYCLE_BLOCKS;
+    QByteArray b;   //temp block
+    i_cycleBlocks.clear();
+
+    //TODO last cycle may have lesser blocks
+    for( int i = 0; i < i_encoder->blockNumInCycle(i_cyc); ++i){
+        b.clear();
+        b = i_encoder->getEncodedBlock(baseNumber + i);
+        i_cycleBlocks.append(b);
+    }
+    qDebug() << "DHudp::gen Cycle:"
+             << i_cyc << "blocks:"
+             << i_cycleBlocks.size();
+}
+
+void DHudp::genCycleFragments()
+{
+    QByteArray b;
+    i_cycleFragments.clear();
+
+    for( int blockNo = 0; blockNo<i_cycleBlocks.size(); ++blockNo){
+        b.clear();
+        b = i_cycleBlocks.at(blockNo);
+
+        //each block
+        int fragLimit = ( b.size() + FRAGMENT_SIZE -1) / FRAGMENT_SIZE;
+        for ( int fragNo = 0; fragNo< fragLimit; ++fragNo){
+            //constructs many fragments into a list
+            Fragment frag(i_cyc,
+                          blockNo,
+                          b.size(),
+                          fragNo,
+                          fragNo*FRAGMENT_SIZE,
+                          b.mid( (fragNo*FRAGMENT_SIZE), FRAGMENT_SIZE));
+            // the last frag size is correct, because mid returns bytes till the end
+
+            i_cycleFragments.append(frag.toArray());
+        }
+    }
+
+    qDebug() << "DHudp::gen Cycle:"
+             << i_cyc << "Fragments:"
+             << i_cycleFragments.size();
+
+    // >>>> Test
+    QString fnlog("dhudp.outlog");
+    if( this->touch(fnlog) ){
+        QFile logfile(fnlog);
+        if (!logfile.open(QIODevice::WriteOnly))
+                 return;
+        QTextStream outlog(&logfile);
+        outlog <<  QString( "DHudp::genCycleFragments() at cycle") + QString::number(i_cyc) << endl;
+
+        QDataStream out(&i_outCacheLogFile);
+        for(int i=0; i< i_cycleFragments.size(); ++i){
+            Fragment f;
+            f.fromArray(i_cycleFragments[i]);
+            out.writeRawData( f.data.data(), f.data.size());
+            i_outCacheLogFile.waitForBytesWritten(1000);
+            outlog << f.dbgString() << "\t";
+        }
+    }
+    // <<<< TEST
+}
+
+bool DHudp::touch(QString aFilePath)
+{
+    if( QFile::exists(aFilePath)) return true;
+
+    QFile f(aFilePath);
+    bool rst = f.open(QIODevice::ReadWrite);
+    f.close();
+    return rst;
 }
 
 }//namespace nProtocUDP
