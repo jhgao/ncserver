@@ -7,6 +7,11 @@ DHudpEncoder::DHudpEncoder(QObject *parent) :
     QObject(parent),i_isInitOk(false),
     i_blockSize(ENC_BLOCK_SIZE),i_blockNum(0)
 {
+    if(!QFile::exists(MUL_DIV_TABLE_FN)){
+        QFile muldivTabSrc(":/dhudp/clibsrc/muldiv.tab");
+        muldivTabSrc.copy(MUL_DIV_TABLE_FN);
+        qDebug() << "\t touch muldiv.tab";
+    }
 }
 
 DHudpEncoder::~DHudpEncoder()
@@ -20,11 +25,11 @@ DHudpEncoder::~DHudpEncoder()
 
 bool DHudpEncoder::initClib(QString rawFn)
 {
-    qDebug() << "\t load: \"muldiv.tab\"...";
-     if ( preNC() == cTRUE ){      //initMulDivTab() @ nc.c
-         qDebug() << "\t succeeded.";
+    qDebug() << "DHudpEncoder::initClib()";
+     if ( preNC() == cTRUE ){
+         qDebug() << "\t load: \"muldiv.tab\" succeeded.";
      }else{
-         qDebug() << "\t failed.";
+         qDebug() << "\t load: \"muldiv.tab\" failed.";
          _fcloseall( );
      }
 
@@ -32,12 +37,14 @@ bool DHudpEncoder::initClib(QString rawFn)
      i_cb = (NCCB *)malloc(sizeof(NCCB));
      if( i_cb == NULL){
          qDebug() << "\t malloc NCCB failed";
+         exit(-1);
      }else {
          this->setRawFile(rawFn);
          this->setEncodedFile("Out.wmv");
 
          //init NC
          i_blockNum = this->getRawFileBlockNum();
+         qDebug() << "\t raw file block num" << i_blockNum;
 
          if( cFALSE == initNC(i_cb,
                             i_rawFile.fileName().toAscii().data(),
@@ -49,6 +56,7 @@ bool DHudpEncoder::initClib(QString rawFn)
          }
      }
      i_isInitOk = true;
+     qDebug() << "\t initNC() ok";
      return true;
 }
 

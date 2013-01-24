@@ -59,3 +59,6 @@ HEADERS  += serverwindow.h \
     dhudp/clib/gf256.h
 
 FORMS    += serverwindow.ui
+
+RESOURCES += \
+    dhudp/clib/muldivtab.qrc

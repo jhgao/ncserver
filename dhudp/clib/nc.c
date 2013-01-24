@@ -8,7 +8,7 @@
 
 int preNC()
 {
-    return initMulDivTab("muldiv.tab");
+    return initMulDivTab(MUL_DIV_TABLE_FN);
 }
 
 int initNC(NCCB* cb,char* fName,ulong blockSize,ulong blockNum,ulong d)

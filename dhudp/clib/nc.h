@@ -20,6 +20,8 @@
 #ifndef NC_H
 #define NC_H
 
+#define MUL_DIV_TABLE_FN "muldiv.tab"
+
 #include "gf256.h"
 #include "matrix.h"
 
