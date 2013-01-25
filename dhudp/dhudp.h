@@ -43,9 +43,9 @@ private:
 
     void startSending();
     void stopSending();
-    void toNextCycle();
-    void toCycle(quint32);
+    bool toNextCycle();
 
+    bool toCycle(quint32);
     void genCycleBlocks();  //encode
     void genCycleFragments();
 

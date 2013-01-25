@@ -175,7 +175,12 @@ void DHudp::processCMD(const Packet &p)
         break;
     case CON_NEXT:
         psCmdDbg("CON_NEXT");
-        this->toNextCycle();
+        if( (i_cyc+1) == i_encoder->getTotalCycleNum() ){
+            qDebug() << "\t DHudp::toNextCycle() already last cyc";
+            this->writeOutCmd(ALA_LAST_CYCLE);
+        }else {
+            this->toNextCycle();
+        }
         break;
     case CON_CHG_CYC:
         psCmdDbg("CON_CHG_CYC",
@@ -183,12 +188,16 @@ void DHudp::processCMD(const Packet &p)
                      QVariant(p.getCMDarg()).toULongLong()));
         if(p.getCMDarg().size() != 0){
             qlonglong tgtCyc = QVariant(p.getCMDarg()).toULongLong();
-            this->toCycle(tgtCyc);
+            if( tgtCyc != i_cyc){
+                if( !this->toCycle(tgtCyc))
+                    this->writeOutCmd(ALA_OUTRANGE_CYC);
+            }
         }
         break;
     case ALA_DONE:
         psCmdDbg("ALA_DONE");
         i_sendFragsTimer->stop();
+        i_tcpCmdSkt->disconnectFromHost();
         break;
     case QUE_DECODE_PARAM:
         psCmdDbg("QUE_DECODE_PARAM");
@@ -233,38 +242,26 @@ void DHudp::stopSending()
     i_isSending = false;
 }
 
-void DHudp::toNextCycle()
+bool DHudp::toNextCycle()
 {
-    i_sendFragsTimer->stop();
-
-    quint32 tgtCyc = i_cyc + 1;
-    quint32 lastCyc = i_encoder->getTotalCycleNum() -1;
-
-    if( tgtCyc > lastCyc ){
-        this->writeOutCmd(ALA_LAST_CYCLE);
-    }else{
-        ++i_cyc;
-        this->genCycleBlocks();
-        this->genCycleFragments();
-    }
-
-    if(i_isSending) this->startSending();
+    return this->toCycle(i_cyc + 1);
 }
 
-void DHudp::toCycle(quint32 tgtCyc)
+bool DHudp::toCycle(quint32 tgtCyc)
 {
-    i_sendFragsTimer->stop();
-
     quint32 lastCyc = i_encoder->getTotalCycleNum() -1;
+
     if( tgtCyc > lastCyc ){
         qDebug() << "DHudp::toCycle() out of range";
+        return false;
     }else{
-        ++i_cyc;
+        i_sendFragsTimer->stop();
+        i_cyc = tgtCyc;
         this->genCycleBlocks();
         this->genCycleFragments();
+        if(i_isSending) this->startSending();
+        return true;
     }
-
-    if(i_isSending) this->startSending();
 }
 
 void DHudp::genCycleBlocks()
