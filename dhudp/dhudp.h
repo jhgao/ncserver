@@ -17,7 +17,6 @@ namespace nProtocUDP{
 
 static const int WAIT_FOR_CONNECTED_TIMEOUT  = 5000;
 static const int WAIT_FOR_BYTES_WRITTEN_TIMEOUT = 5000;
-static const QString CACHE_LOG_FILE = "dhudp.outcache";
 
 class DHudp : public DataHandler
 {
@@ -69,9 +68,6 @@ private:
     quint32 i_cyc;      //current cycle number
     QList<QByteArray> i_cycleFragments;
     QList<QByteArray> i_cycleBlocks;
-
-    //log
-    QFile i_outCacheLogFile;
 };
 
 }//namespace nProtocUDP

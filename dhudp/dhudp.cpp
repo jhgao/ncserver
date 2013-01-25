@@ -43,11 +43,6 @@ DHudp::DHudp(const QByteArray arg, QObject *parent) :
     }else{
         qDebug() << "\t Err: can not connect to client";
     }
-
-    i_outCacheLogFile.setFileName(CACHE_LOG_FILE);
-    if(!touch(i_outCacheLogFile.fileName())){
-        qDebug() << "\t failed create cache log file";
-    }
 }
 
 QByteArray DHudp::getInitProtocAckArg()
@@ -309,26 +304,6 @@ void DHudp::genCycleFragments()
     qDebug() << "DHudp::gen Cycle:"
              << i_cyc << "Fragments:"
              << i_cycleFragments.size();
-
-    // >>>> Test
-    QString fnlog("dhudp.outlog");
-    if( this->touch(fnlog) ){
-        QFile logfile(fnlog);
-        if (!logfile.open(QIODevice::WriteOnly))
-                 return;
-        QTextStream outlog(&logfile);
-        outlog <<  QString( "DHudp::genCycleFragments() at cycle") + QString::number(i_cyc) << endl;
-
-        QDataStream out(&i_outCacheLogFile);
-        for(int i=0; i< i_cycleFragments.size(); ++i){
-            Fragment f;
-            f.fromArray(i_cycleFragments[i]);
-            out.writeRawData( f.data.data(), f.data.size());
-            i_outCacheLogFile.waitForBytesWritten(1000);
-            outlog << f.dbgString() << "\t";
-        }
-    }
-    // <<<< TEST
 }
 
 bool DHudp::touch(QString aFilePath)
