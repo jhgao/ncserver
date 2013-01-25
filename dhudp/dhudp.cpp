@@ -174,7 +174,7 @@ void DHudp::processCMD(const Packet &p)
         }
         break;
     case CON_NEXT:
-        psCmdDbg("CON_NEXT");
+        psCmdDbg("CON_NEXT",QString::number(i_cyc)+"++");
         if( (i_cyc+1) == i_encoder->getTotalCycleNum() ){
             qDebug() << "\t DHudp::toNextCycle() already last cyc";
             this->writeOutCmd(ALA_LAST_CYCLE);
@@ -183,7 +183,7 @@ void DHudp::processCMD(const Packet &p)
         }
         break;
     case CON_CHG_CYC:
-        psCmdDbg("CON_CHG_CYC",
+        psCmdDbg("CON_CHG_CYC",QString::number(i_cyc) + " -> " +
                  QString::number(
                      QVariant(p.getCMDarg()).toULongLong()));
         if(p.getCMDarg().size() != 0){
@@ -196,7 +196,7 @@ void DHudp::processCMD(const Packet &p)
         break;
     case ALA_DONE:
         psCmdDbg("ALA_DONE");
-        i_sendFragsTimer->stop();
+        this->stopSending();
         i_tcpCmdSkt->disconnectFromHost();
         break;
     case QUE_DECODE_PARAM:
