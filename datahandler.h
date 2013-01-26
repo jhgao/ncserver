@@ -19,7 +19,10 @@ public:
     virtual bool isInitOk() = 0;
 signals:
     void sig_writeOutCmd(quint16,QByteArray);
-    
+
+    void sig_progressPercent(uint);
+    void sig_gotBlockSN(quint32 sn);
+
 public slots:
 protected:
     /* signal parent object to write out CMD */
