@@ -1,5 +1,0 @@
-<RCC>
-    <qresource prefix="/dhudp/clibsrc">
-        <file>muldiv.tab</file>
-    </qresource>
-</RCC>

@@ -16,7 +16,7 @@ DHudp::DHudp(const QByteArray arg, QObject *parent) :
     i_encoder = new DHudpEncoder(this);
     ServerConfig* sc = ServerConfig::get_instance();
     i_encoder->setRawFile(sc->getRawFileName());
-    i_encoder->initClib(sc->getRawFileName());
+//    i_encoder->initClib(sc->getRawFileName());
 
     i_sendFragsTimer = new QTimer(this);
     connect(i_sendFragsTimer, SIGNAL(timeout()),
@@ -268,7 +268,7 @@ void DHudp::genCycleBlocks()
     //TODO last cycle may have lesser blocks
     for( int i = 0; i < i_encoder->blockNumInCycle(i_cyc); ++i){
         b.clear();
-        b = i_encoder->getEncodedBlock(baseNumber + i);
+        b = i_encoder->getEncodedBlockCpp(baseNumber + i);
         i_cycleBlocks.append(b);
     }
     qDebug() << "DHudp::gen Cycle:"

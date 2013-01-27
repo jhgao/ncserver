@@ -27,11 +27,7 @@ SOURCES += main.cpp\
     protocol/rawblock.cpp \
     dhudp/dhudpencoder.cpp \
     dhudp/decparams.cpp \
-    dhudp/fragment.cpp \
-    dhudp/clib/randomlib.c \
-    dhudp/clib/nc.c \
-    dhudp/clib/matrix.c \
-    dhudp/clib/gf256.c
+    dhudp/fragment.cpp
 
 HEADERS  += serverwindow.h \
     waitingserver.h \
@@ -52,13 +48,8 @@ HEADERS  += serverwindow.h \
     dhudp/dhudpencoder.h \
     dhudp/dhudpprotocol.h \
     dhudp/decparams.h \
-    dhudp/fragment.h \
-    dhudp/clib/randomlib.h \
-    dhudp/clib/nc.h \
-    dhudp/clib/matrix.h \
-    dhudp/clib/gf256.h
+    dhudp/fragment.h
 
 FORMS    += serverwindow.ui
 
-RESOURCES += \
-    dhudp/clib/muldivtab.qrc
+RESOURCES +=

@@ -4,72 +4,13 @@
 namespace nProtocUDP{
 
 DHudpEncoder::DHudpEncoder(QObject *parent) :
-    QObject(parent),i_isInitOk(false),
+    QObject(parent),
     i_blockSize(ENC_BLOCK_SIZE),i_blockNum(0)
 {
-    if(!QFile::exists(MUL_DIV_TABLE_FN)){
-        QFile muldivTabSrc(":/dhudp/clibsrc/muldiv.tab");
-        muldivTabSrc.copy(MUL_DIV_TABLE_FN);
-        qDebug() << "\t touch muldiv.tab";
-    }
 }
-
-DHudpEncoder::~DHudpEncoder()
+/* encoding without clib */
+QByteArray DHudpEncoder::getEncodedBlockCpp(quint64 i)
 {
-    clearNC(i_cb);
-    if(mtab != NULL)
-        free(mtab);
-    if(dtab != NULL)
-        free(dtab);
-}
-
-bool DHudpEncoder::initClib(QString rawFn)
-{
-    qDebug() << "DHudpEncoder::initClib()";
-     if ( preNC() == cTRUE ){
-         qDebug() << "\t load: \"muldiv.tab\" succeeded.";
-     }else{
-         qDebug() << "\t load: \"muldiv.tab\" failed.";
-         _fcloseall( );
-     }
-
-     //NC params
-     i_cb = (NCCB *)malloc(sizeof(NCCB));
-     if( i_cb == NULL){
-         qDebug() << "\t malloc NCCB failed";
-         exit(-1);
-     }else {
-         this->setRawFile(rawFn);
-         this->setEncodedFile("Out.wmv");
-
-         //init NC
-         i_blockNum = this->getRawFileBlockNum();
-         qDebug() << "\t raw file block num" << i_blockNum;
-
-         if( cFALSE == initNC(i_cb,
-                            i_rawFile.fileName().toAscii().data(),
-                            i_blockSize,
-                            i_blockNum,
-                            i_d)){
-             qDebug() << "\t initNC() failed";
-             _fcloseall( );
-         }
-     }
-     i_isInitOk = true;
-     qDebug() << "\t initNC() ok";
-     return true;
-}
-
-QByteArray DHudpEncoder::getEncodedBlock(quint64 i)
-{
-    if( !i_isInitOk ) return QByteArray();
-
-    //data
-    QByteArray data = QByteArray::fromRawData(
-                (const char *)encodeIdentity(i_cb,i),
-                sizeof(FIELD)*i_cb->blockSize
-                );
-
     //coeff
     QByteArray coeff;
     char c1 = (char)0x01;
@@ -77,7 +18,33 @@ QByteArray DHudpEncoder::getEncodedBlock(quint64 i)
     coeff.fill((char)0x00);
     coeff.replace(i,1,&c1,1);
 
-    return coeff.append(data);
+    //read raw Block
+    quint64 offset = i_blockSize*i;
+    if( offset >= i_rawFile.size()){
+        qDebug() << "\t Err: encoding block out of file";
+        return QByteArray();
+    }
+
+    QByteArray rawBlock;
+    QFile rawFile(i_rawFile.absoluteFilePath());
+    rawFile.open(QIODevice::ReadOnly);
+    rawFile.seek(offset);
+    rawBlock = rawFile.read(i_blockSize);
+    rawFile.close();
+    if(rawBlock.size() < i_blockSize){
+        qDebug() << "\t Err: read raw block not enough size";
+        rawBlock.resize(i_blockSize);
+        rawBlock.replace(rawBlock.size(),
+                         i_blockSize - rawBlock.size(),
+                         0x00);
+    }
+
+    //gen encoded block
+    QByteArray encBlock;
+    //TODO encode
+    encBlock = coeff.append(rawBlock);
+
+    return encBlock;
 }
 
 bool DHudpEncoder::setRawFile(QString absPath)
