@@ -10,7 +10,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = NCServer
 TEMPLATE = app
-
+#win32: LIBS += wsock32.lib
 
 SOURCES += main.cpp\
         serverwindow.cpp \

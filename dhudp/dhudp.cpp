@@ -136,11 +136,18 @@ void DHudp::writeOutData(const QByteArray a)
     if(i_udpDataSkt){
         Packet p(a);
         QByteArray dg = p.genPacket();  //dg:datagram
-        quint64 wroteSize = i_udpDataSkt->write(dg,dg.size());
+//        qint64 wroteSize = i_udpDataSkt->write(dg,dg.size());
+        qint64 wroteSize = i_udpDataSkt->writeDatagram(dg,
+                                                QHostAddress(i_clientDataAddrs),
+                                                i_clientDataListingPort);
+        i_udpDataSkt->waitForBytesWritten(300);
 
         if( wroteSize != dg.size() )
         qDebug() << "Connection::writeOutData() _wrote out wrong size"
-                 << wroteSize << "/" << dg.size();
+                 << wroteSize << "/" << dg.size()
+                 << "\t" << i_udpDataSkt->errorString();
+//                 << "WSA error" << WSAGetLastError()
+//                 << "last error" << GetLastError();
     }
     else{
         qDebug() << "Connection::writeOutData() _no socket available";
@@ -161,9 +168,10 @@ void DHudp::processCMD(const Packet &p)
             args >> i_clientDataListingPort;
 
             i_udpDataSkt->abort();
-            i_udpDataSkt->connectToHost(
-                        QHostAddress(i_clientDataAddrs),
-                        i_clientDataListingPort);
+            i_udpDataSkt->bind(0,QUdpSocket::DontShareAddress);
+//            i_udpDataSkt->connectToHost(
+//                        QHostAddress(i_clientDataAddrs),
+//                        i_clientDataListingPort);
 
             this->startSending();
         }

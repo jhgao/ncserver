@@ -13,6 +13,9 @@
 #include "dhudpencoder.h"
 #include "fragment.h"
 
+//#include <WinSock2.h>
+//#include <Windows.h>
+
 namespace nProtocUDP{
 
 static const int WAIT_FOR_CONNECTED_TIMEOUT  = 5000;

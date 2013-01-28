@@ -7,7 +7,8 @@ DecParams::DecParams():
     inBlockDataSize(0),
     totalEncBlocks(0),
     oneCycleBlockNum(0),
-    totalCycleNum(0)
+    totalCycleNum(0),
+    fragSize(0)
 {
 }
 
@@ -17,7 +18,8 @@ DecParams::DecParams(const QByteArray &a):
     inBlockDataSize(0),
     totalEncBlocks(0),
     oneCycleBlockNum(0),
-    totalCycleNum(0)
+    totalCycleNum(0),
+    fragSize(0)
 {
     this->fromArray(a);
 }
@@ -30,6 +32,7 @@ DecParams &DecParams::operator =(const DecParams &rhs)
     totalEncBlocks = rhs.totalEncBlocks;
     oneCycleBlockNum = rhs.oneCycleBlockNum;
     totalCycleNum = rhs.totalCycleNum;
+    fragSize = rhs.fragSize;
     return *this;
 }
 
@@ -44,6 +47,7 @@ QByteArray DecParams::toArray() const
     fs << totalEncBlocks;
     fs << oneCycleBlockNum;
     fs << totalCycleNum;
+    fs << fragSize;
     return f;
 }
 
@@ -57,6 +61,7 @@ bool DecParams::fromArray(const QByteArray &a)
     in >> totalEncBlocks;
     in >> oneCycleBlockNum;
     in >>totalCycleNum;
+    in >>fragSize;
     return true;
 }
 
@@ -68,6 +73,7 @@ QString DecParams::dbgString() const
             + QString(" blockData") + QString::number(inBlockDataSize)
             + QString(" totalBlock") + QString::number(totalEncBlocks)
             + QString(" oneCycleBlock") + QString::number(oneCycleBlockNum)
-            + QString(" totalCycle") + QString::number(totalCycleNum);
+            + QString(" totalCycle") + QString::number(totalCycleNum)
+            + QString(" fragSize") + QString::number(fragSize);
 }
 }//namespace nProtocUDP

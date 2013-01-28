@@ -30,6 +30,9 @@ public:
     //about cycling
     quint32 oneCycleBlockNum;
     quint32 totalCycleNum;
+
+    //ablout fragment
+    quint32 fragSize;
 };
 
 }//namespace nProtocUDP

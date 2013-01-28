@@ -81,6 +81,7 @@ QByteArray DHudpEncoder::getDecoderParameters() const
     p.totalEncBlocks = this->getRawFileBlockNum();
     p.oneCycleBlockNum = ONE_CYCLE_BLOCKS;
     p.totalCycleNum = this->getTotalCycleNum();
+    p.fragSize = FRAGMENT_SIZE;
     return p.toArray();
 }
 
