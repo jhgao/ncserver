@@ -27,7 +27,10 @@ SOURCES += main.cpp\
     protocol/rawblock.cpp \
     dhudp/dhudpencoder.cpp \
     dhudp/decparams.cpp \
-    dhudp/fragment.cpp
+    dhudp/fragment.cpp \
+    dhudp/gf256/gf256num.cpp \
+    dhudp/gf256/gf256multab.cpp \
+    dhudp/gf256/gf256divtab.cpp
 
 HEADERS  += serverwindow.h \
     waitingserver.h \
@@ -48,7 +51,8 @@ HEADERS  += serverwindow.h \
     dhudp/dhudpencoder.h \
     dhudp/dhudpprotocol.h \
     dhudp/decparams.h \
-    dhudp/fragment.h
+    dhudp/fragment.h \
+    dhudp/gf256/gf256num.h
 
 FORMS    += serverwindow.ui
 
