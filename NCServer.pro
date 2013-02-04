@@ -21,13 +21,13 @@ SOURCES += main.cpp\
     datahandler.cpp \
     dhtcp/dhtcp.cpp \
     dhudp/dhudp.cpp \
-    connectionthread.cpp \
     gui/droplineedit.cpp \
     dhtcp/dhtcpencoder.cpp \
     protocol/rawblock.cpp \
     dhudp/dhudpencoder.cpp \
     dhudp/decparams.cpp \
-    dhudp/fragment.cpp
+    dhudp/fragment.cpp \
+    execthread.cpp
 
 HEADERS  += serverwindow.h \
     waitingserver.h \
@@ -40,7 +40,6 @@ HEADERS  += serverwindow.h \
     datahandler.h \
     dhtcp/dhtcp.h \
     dhudp/dhudp.h \
-    connectionthread.h \
     dhtcp/dhtcpprotocol.h \
     gui/droplineedit.h \
     dhtcp/dhtcpencoder.h \
@@ -48,7 +47,8 @@ HEADERS  += serverwindow.h \
     dhudp/dhudpencoder.h \
     dhudp/dhudpprotocol.h \
     dhudp/decparams.h \
-    dhudp/fragment.h
+    dhudp/fragment.h \
+    execthread.h
 
 FORMS    += serverwindow.ui
 

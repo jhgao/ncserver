@@ -8,7 +8,7 @@ Connection::Connection(int socketDescriptor, QObject *parent) :
     connect(this, SIGNAL(readyRead()),
             this, SLOT(onControlSktReadyRead()));
     connect(this, SIGNAL(disconnected()),   //TODO: when to finish
-            this, SIGNAL(sig_ConnectionFinished()));
+            this, SLOT(onDisconnected()));
 
     qDebug() << ">>> Connection() from "
              << this->peerAddress().toString()
@@ -150,4 +150,9 @@ void Connection::processProtocolDeclare(eProtocTypes type, const QByteArray prot
     }else{
         this->abort();
     }
+}
+
+void Connection::onDisconnected()
+{
+    emit sig_ConnectionFinished(this);
 }

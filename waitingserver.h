@@ -2,7 +2,9 @@
 #define WAITINGSERVER_H
 
 #include <QTcpServer>
-#include "connectionthread.h"
+#include <QMap>
+#include "execthread.h"
+#include "connection.h"
 
 class WaitingServer : public QTcpServer
 {
@@ -14,10 +16,10 @@ protected:
     void incomingConnection(int socketDescriptor);
 
 private slots:
-    void onConnectionFinished(ConnectionThread *ct);
+    void onConnectionFinished(Connection *con);
     
 private:
-    QList<ConnectionThread*> listOfConThreads;   //for server statics
+    QMap<Connection*,ExecThread*> i_ConMapList;    //connection and thread map list
     int icount;
 };
 

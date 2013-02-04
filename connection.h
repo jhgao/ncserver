@@ -20,10 +20,11 @@ public:
                              QObject *parent = 0);
     
 signals:
-    void sig_ConnectionFinished();
+    void sig_ConnectionFinished(Connection*);
     
 public slots:
 private slots:
+    void onDisconnected();
     void onControlSktReadyRead();
     void processCMD(const Packet& p);
     bool initDataHandler(eProtocTypes type, const QByteArray protocArg);

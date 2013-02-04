@@ -10,18 +10,29 @@ void WaitingServer::incomingConnection(int socketDescriptor)
     qDebug() << "WaitingServer::incomingConnection()";
     icount++;
 
-    ConnectionThread* ct = new ConnectionThread(socketDescriptor,this);
-    listOfConThreads.append(ct);
-    connect(ct, SIGNAL(sig_ConnectionFinished(ConnectionThread*)),
-            this, SLOT(onConnectionFinished(ConnectionThread*)));
-    ct->start();    //TODO: priority
+    Connection *con = new Connection(socketDescriptor);
+    ExecThread *exet = new ExecThread(this);
+
+    connect(con, SIGNAL(sig_ConnectionFinished(Connection*)),
+            this, SLOT(onConnectionFinished(Connection*)));
+
+    con->moveToThread(exet);
+    exet->start(); //TODO: priority
+
+    i_ConMapList.insert(con,exet);
 
     qDebug() << "\t working link / incoming count: "
-             << listOfConThreads.size()
+             << i_ConMapList.size()
              << "/" << icount;
 }
 
-void WaitingServer::onConnectionFinished(ConnectionThread *ct)
+void WaitingServer::onConnectionFinished(Connection *con)
 {
-    listOfConThreads.removeOne(ct);
+    qDebug() << "WaitingServer::onConnectionFinished()" << con;
+    ExecThread *exet = i_ConMapList.value(con);
+    if(exet){
+        exet->quit();
+//        exet->deleteLater();  //TODO: clean up
+    }
+    i_ConMapList.remove(con);
 }
