@@ -13,17 +13,27 @@ void WaitingServer::incomingConnection(int socketDescriptor)
     Connection *con = new Connection(socketDescriptor);
     ExecThread *exet = new ExecThread(this);
 
+    i_ConMapList.insert(con,exet);
     connect(con, SIGNAL(sig_ConnectionFinished(Connection*)),
             this, SLOT(onConnectionFinished(Connection*)));
+    connect(con, SIGNAL(sig_logForGui(QString)),
+            this, SIGNAL(sig_connectionLogForGui(QString)));
+
+
+    QString s("New connection from");
+    s += con->peerAddress().toString()
+            + ":" + QString::number(con->peerPort());
+
+    QString counts;
+    counts += QString::number(i_ConMapList.size())
+            + "/" + QString::number(icount);
+
+    emit sig_logForGui(s + " [" + counts + "]" + "<" + QString::number(reinterpret_cast<int>(con)) + ">");
+
+    this->emitStatusString();
 
     con->moveToThread(exet);
     exet->start(); //TODO: priority
-
-    i_ConMapList.insert(con,exet);
-
-    qDebug() << "\t working link / incoming count: "
-             << i_ConMapList.size()
-             << "/" << icount;
 }
 
 void WaitingServer::onConnectionFinished(Connection *con)
@@ -35,4 +45,16 @@ void WaitingServer::onConnectionFinished(Connection *con)
 //        exet->deleteLater();  //TODO: clean up
     }
     i_ConMapList.remove(con);
+    this->emitStatusString();
+}
+
+void WaitingServer::emitStatusString()
+{
+    QString stats;
+     stats += "working link / incoming count: "
+             + QString::number(i_ConMapList.size())
+             + "/" + QString::number(icount);
+
+      emit sig_statusString(stats);
+     qDebug() << "\t" << stats;
 }

@@ -13,6 +13,13 @@ ServerWindow::ServerWindow(QWidget *parent) :
     ui->lineEdit_rawFile->setText(RAW_FILE);
     ServerConfig::get_instance()->setRawFileName(RAW_FILE);
 
+    connect(&i_tcpWaitingServer, SIGNAL(sig_connectionLogForGui(QString)),
+            ui->textEdit_log, SLOT(append(QString)));
+    connect(&i_tcpWaitingServer, SIGNAL(sig_logForGui(QString)),
+            ui->textEdit_log, SLOT(append(QString)));
+    connect(&i_tcpWaitingServer, SIGNAL(sig_statusString(QString)),
+            ui->statusBar, SLOT(showMessage(QString)));
+
     qDebug() << QCoreApplication::applicationDirPath();
 
     ///

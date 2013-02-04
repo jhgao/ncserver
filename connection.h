@@ -20,6 +20,7 @@ public:
                              QObject *parent = 0);
     
 signals:
+    void sig_logForGui(QString);
     void sig_ConnectionFinished(Connection*);
     
 public slots:
