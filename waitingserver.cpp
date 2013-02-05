@@ -28,7 +28,7 @@ void WaitingServer::incomingConnection(int socketDescriptor)
     counts += QString::number(i_ConMapList.size())
             + "/" + QString::number(icount);
 
-    emit sig_logForGui(s + " [" + counts + "]" + "<" + QString::number(reinterpret_cast<int>(con)) + ">");
+    emit sig_logForGui(s + " [" + counts + "]" + "<" + QString::number(reinterpret_cast<unsigned long int>(con)) + ">");
 
     this->emitStatusString();
 

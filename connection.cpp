@@ -91,11 +91,11 @@ bool Connection::initDataHandler(eProtocTypes type, const QByteArray protocArg)
         return false;
         break;
     case PROTOC_TCP:
-        emit sig_logForGui("PROTOC_TCP <" + QString::number(reinterpret_cast<int>(this)));
+        emit sig_logForGui("PROTOC_TCP <" + QString::number(reinterpret_cast<unsigned long int>(this)));
         i_dh = new nProtocTCP::DHtcp(protocArg,this);
         break;
     case PROTOC_UDP:
-        emit sig_logForGui("PROTOC_UDP <" + QString::number(reinterpret_cast<int>(this)));
+        emit sig_logForGui("PROTOC_UDP <" + QString::number(reinterpret_cast<unsigned long int>(this)));
         i_dh = new nProtocUDP::DHudp(protocArg,this);
         break;
     default:
